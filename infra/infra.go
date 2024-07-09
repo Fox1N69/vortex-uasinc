@@ -3,25 +3,22 @@ package infra
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
-	"time"
+	"test-task/storage/postgres"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 type Infra interface {
 	Config() *viper.Viper
 	SetMode() string
-	GormDB() *gorm.DB
-	GormMigrate(values ...interface{})
 	Port() string
 	RedisClient() *redis.Client
+	PSQLClient() *postgres.PSQLClient
+	RunSQLMigrations()
 }
 
 type infra struct {
@@ -75,62 +72,6 @@ func (i *infra) SetMode() string {
 }
 
 var (
-	grmOnce sync.Once
-	grm     *gorm.DB
-)
-
-func (i *infra) GormDB() *gorm.DB {
-	grmOnce.Do(func() {
-		config := i.Config().Sub("database")
-		user := config.GetString("user")
-		pass := config.GetString("pass")
-		host := config.GetString("host")
-		port := config.GetString("port")
-		name := config.GetString("name")
-
-		dns := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, pass, host, port, name)
-		db, err := gorm.Open(postgres.Open(dns), &gorm.Config{})
-		if err != nil {
-			logrus.Fatalf("[infra][GormDB][gorm.Open] %v", err)
-		}
-
-		sqlDB, err := db.DB()
-		if err != nil {
-			logrus.Fatalf("[infra][GormDB][db.DB] %v", err)
-		}
-
-		if err := sqlDB.Ping(); err != nil {
-			logrus.Fatalf("[infra][GormDB][sqlDB.Ping] %v", err)
-		}
-
-		sqlDB.SetMaxOpenConns(100)
-		sqlDB.SetConnMaxLifetime(time.Hour)
-
-		grm = db
-	})
-
-	return grm
-}
-
-var (
-	migrateOnce sync.Once
-)
-
-func (i *infra) GormMigrate(values ...interface{}) {
-	migrateOnce.Do(func() {
-		if i.SetMode() == gin.DebugMode {
-			if err := i.GormDB().Debug().AutoMigrate(values...); err != nil {
-				logrus.Fatalf("[infra][Migrate][GormDB.Debug.AutoMigrate] %v", err)
-			}
-		} else if i.SetMode() == gin.ReleaseMode {
-			if err := i.GormDB().AutoMigrate(values...); err != nil {
-				logrus.Fatalf("[infra][Migrate][GormDB.AutoMigrate] %v", err)
-			}
-		}
-	})
-}
-
-var (
 	portOnce sync.Once
 	port     string
 )
@@ -169,4 +110,22 @@ func (i *infra) RedisClient() *redis.Client {
 	})
 
 	return rdb
+}
+
+func (i *infra) PSQLClient() *postgres.PSQLClient {
+	config := i.Config().Sub("database")
+	user := config.GetString("user")
+	pass := config.GetString("pass")
+	host := config.GetString("host")
+	port := config.GetString("port")
+	name := config.GetString("name")
+
+	client := postgres.NewPSQLClient()
+	client.Connect(user, pass, host, port, name)
+
+	return client
+}
+
+func (i *infra) RunSQLMigrations() {
+	i.PSQLClient().SqlMigrate()
 }

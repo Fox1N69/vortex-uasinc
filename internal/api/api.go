@@ -1,10 +1,10 @@
 package api
 
 import (
-	"test-task/common/http/middleware"
-	"test-task/common/http/request"
 	"test-task/infra"
 	"test-task/internal/manager"
+	"test-task/pkg/http/middleware"
+	"test-task/pkg/http/request"
 
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"

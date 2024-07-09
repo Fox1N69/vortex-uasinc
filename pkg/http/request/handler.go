@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"test-task/common/http/response"
+	"test-task/pkg/http/response"
 
 	"github.com/gin-gonic/gin"
 )
