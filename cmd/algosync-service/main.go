@@ -19,9 +19,10 @@ func main() {
 
 	//Connect to database and migration
 	i.PSQLClient()
+	log.Info("Connect to PSQLClient")
 	i.RunSQLMigrations()
+	log.Info("Sql migrations compelet")
 
 	// Start api server
 	api.NewServer(i).Run()
-	log.Info("UserAlgoSync start")
 }

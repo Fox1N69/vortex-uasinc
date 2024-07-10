@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang-migrate/migrate"
-	"github.com/golang-migrate/migrate/database/postgres"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/sirupsen/logrus"
 )
 
@@ -40,7 +41,6 @@ func (s *PSQLClient) Connect(user, password, host, port, dbname string) error {
 	}
 
 	s.DB = db
-	log.Println("Connect to Postgres")
 	return nil
 }
 
@@ -74,6 +74,5 @@ func (s *PSQLClient) SqlMigrate() error {
 		return fmt.Errorf("%s %w", op, err)
 	}
 
-	log.Println("SQL migrations completed")
 	return nil
 }
