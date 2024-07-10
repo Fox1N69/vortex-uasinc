@@ -71,7 +71,19 @@ func (cr *clientRepository) ClientByID(id int64) (*models.Client, error) {
 	`
 
 	var client models.Client
-	err := cr.db.QueryRow(query, id).Scan(&client)
+	err := cr.db.QueryRow(query, id).Scan(
+		&client.ID,
+		&client.ClientName,
+		&client.Version,
+		&client.Image,
+		&client.CPU,
+		&client.Memory,
+		&client.Priority,
+		&client.NeedRestart,
+		&client.SpawnedAt,
+		&client.CreatedAt,
+		&client.UpdatedAt,
+	)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -209,7 +221,13 @@ func (cr *clientRepository) AlgorithmStatuses() ([]models.AlgorithmStatus, error
 	var statuses []models.AlgorithmStatus
 	for rows.Next() {
 		var status models.AlgorithmStatus
-		err := rows.Scan(&status)
+		err := rows.Scan(
+			&status.ID,
+			&status.ClientID,
+			&status.HFT,
+			&status.TWAP,
+			&status.VWAP,
+		)
 		if err != nil {
 			return nil, fmt.Errorf("%s %w Clound not scan algorithm", op, err)
 		}
