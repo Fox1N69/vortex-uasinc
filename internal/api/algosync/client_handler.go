@@ -13,6 +13,7 @@ type ClientHandler interface {
 	AddClient(c *gin.Context)
 	UpdateClient(c *gin.Context)
 	DeleteClient(c *gin.Context)
+	UpdateAlgorithmStatus(c *gin.Context)
 }
 
 type clientHandler struct {
@@ -84,5 +85,31 @@ func (ch *clientHandler) DeleteClient(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"id":      clientID,
 		"message": "client deleted success",
+	})
+}
+
+func (ch *clientHandler) UpdateAlgorithmStatus(c *gin.Context) {
+	response := response.New(c)
+
+	algorithmID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(400, err)
+		return
+	}
+
+	var statusParams map[string]interface{}
+	if err := c.ShouldBindJSON(&statusParams); err != nil {
+		response.Error(400, err)
+		return
+	}
+
+	if err := ch.service.UpdateAlgorithmStatus(algorithmID, statusParams); err != nil {
+		response.Error(501, err)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"id":      algorithmID,
+		"message": "algorithm updated success",
 	})
 }

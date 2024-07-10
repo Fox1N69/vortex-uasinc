@@ -12,6 +12,9 @@ type ClientService interface {
 	Update(id int64, updateParams map[string]interface{}) error
 	Delete(id int64) error
 	Clients() ([]models.Client, error)
+	PeriodicCheck()
+	AlgorithmStatuses() ([]models.AlgorithmStatus, error)
+	UpdateAlgorithmStatus(id int64, status map[string]interface{}) error
 }
 
 type clientService struct {
@@ -42,6 +45,14 @@ func (cs *clientService) Delete(id int64) error {
 
 func (cs *clientService) Clients() ([]models.Client, error) {
 	return cs.repository.Clients()
+}
+
+func (cs *clientService) AlgorithmStatuses() ([]models.AlgorithmStatus, error) {
+	return cs.repository.AlgorithmStatuses()
+}
+
+func (cs *clientService) UpdateAlgorithmStatus(id int64, status map[string]interface{}) error {
+	return cs.repository.UpdateAlgorithmStatus(id, status)
 }
 
 func (cs *clientService) PeriodicCheck() {
