@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/go-redis/redis/v8"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,7 +17,7 @@ func TestCreate(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	repo := repository.NewClientRepository(db)
+	repo := repository.NewClientRepository(db, &redis.Client{})
 
 	client := &models.Client{
 		ClientName:  "TestClient",
@@ -46,7 +47,7 @@ func TestClientByID(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	repo := repository.NewClientRepository(db)
+	repo := repository.NewClientRepository(db, &redis.Client{})
 
 	expectedClient := &models.Client{
 		ID:          1,
@@ -79,7 +80,7 @@ func TestUpdate(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	repo := repository.NewClientRepository(db)
+	repo := repository.NewClientRepository(db, &redis.Client{})
 
 	updateParams := map[string]interface{}{
 		"client_name": "UpdatedClient",
@@ -100,7 +101,7 @@ func TestDelete(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	repo := repository.NewClientRepository(db)
+	repo := repository.NewClientRepository(db, &redis.Client{})
 
 	mock.ExpectExec("DELETE FROM clients WHERE id = \\$1").
 		WithArgs(1).
@@ -116,7 +117,18 @@ func TestClients(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	repo := repository.NewClientRepository(db)
+	// Create a Redis client connected to a local Redis server
+	rdb := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+		DB:   0,
+	})
+
+	// Ensure the Redis client is connected and working
+	_, err = rdb.Ping(context.Background()).Result()
+	assert.NoError(t, err, "failed to ping Redis")
+
+	repo := repository.NewClientRepository(db, rdb) // Inject Redis client
+
 	ctx := context.Background()
 
 	expectedClients := []models.Client{
@@ -148,6 +160,7 @@ func TestClients(t *testing.T) {
 		},
 	}
 
+	// Set expectations for SQL query
 	rows := sqlmock.NewRows([]string{"id", "client_name", "version", "image", "cpu", "memory", "priority", "need_restart", "spawned_at", "created_at", "updated_at"})
 	for _, client := range expectedClients {
 		rows.AddRow(client.ID, client.ClientName, client.Version, client.Image, client.CPU, client.Memory, client.Priority, client.NeedRestart, client.SpawnedAt, client.CreatedAt, client.UpdatedAt)
@@ -156,10 +169,16 @@ func TestClients(t *testing.T) {
 	mock.ExpectQuery("SELECT id, client_name, version, image, cpu, memory, priority, need_restart, spawned_at, created_at, updated_at FROM clients").
 		WillReturnRows(rows)
 
+	// Call the method being tested
 	clients, err := repo.Clients(ctx)
-	assert.NoError(t, err)
-	assert.Equal(t, expectedClients, clients)
-	mock.ExpectationsWereMet()
+	assert.NoError(t, err, "error retrieving clients")
+
+	// Verify expectations for SQL
+	assert.NoError(t, mock.ExpectationsWereMet())
+	assert.Equal(t, len(expectedClients), len(clients), "number of returned clients mismatch")
+	for i := range expectedClients {
+		assert.Equal(t, expectedClients[i], clients[i], "client mismatch")
+	}
 }
 
 func TestCreateAlgorithm(t *testing.T) {
@@ -167,8 +186,7 @@ func TestCreateAlgorithm(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	repo := repository.NewClientRepository(db)
-
+	repo := repository.NewClientRepository(db, &redis.Client{})
 	algorithm := &models.AlgorithmStatus{
 		ClientID: 1,
 		VWAP:     true,
@@ -193,7 +211,7 @@ func TestAlgorithmStatuses(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	repo := repository.NewClientRepository(db)
+	repo := repository.NewClientRepository(db, &redis.Client{})
 
 	expectedStatuses := []models.AlgorithmStatus{
 		{
@@ -231,7 +249,7 @@ func TestUpdateAlgorithmStatus(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	repo := repository.NewClientRepository(db)
+	repo := repository.NewClientRepository(db, &redis.Client{})
 
 	updateParams := map[string]interface{}{
 		"vwap": true,

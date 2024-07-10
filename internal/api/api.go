@@ -58,6 +58,7 @@ func (c *server) v1() {
 	{
 		client := api.Group("/client")
 		{
+			client.GET("/", clientHandler.GetAll)
 			client.POST("/add", clientHandler.AddClient)
 			client.PATCH("/:id", clientHandler.UpdateClient)
 			client.DELETE("/:id", clientHandler.DeleteClient)

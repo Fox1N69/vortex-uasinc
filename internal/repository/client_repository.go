@@ -3,12 +3,14 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
 	"test-task/internal/models"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
 )
 
@@ -25,11 +27,12 @@ type ClientRepository interface {
 }
 
 type clientRepository struct {
-	db *sql.DB
+	db  *sql.DB
+	rdb *redis.Client
 }
 
-func NewClientRepository(db *sql.DB) ClientRepository {
-	return &clientRepository{db: db}
+func NewClientRepository(db *sql.DB, redis *redis.Client) ClientRepository {
+	return &clientRepository{db: db, rdb: redis}
 }
 
 func (cr *clientRepository) Create(client *models.Client) (int64, error) {
@@ -142,6 +145,19 @@ func (cr *clientRepository) Delete(id int64) error {
 func (cr *clientRepository) Clients(ctx context.Context) ([]models.Client, error) {
 	const op = "repository.client.Clients"
 
+	cacheKey := "clients_list"
+	cachedData, err := cr.rdb.Get(ctx, cacheKey).Bytes()
+	if err == nil {
+		var clients []models.Client
+		err = json.Unmarshal(cachedData, &clients)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		return clients, nil
+	} else if err != redis.Nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
 	query := `
 		SELECT id, client_name, version, image, cpu, memory, priority, need_restart, spawned_at, created_at, updated_at
 		FROM clients
@@ -149,7 +165,7 @@ func (cr *clientRepository) Clients(ctx context.Context) ([]models.Client, error
 
 	rows, err := cr.db.QueryContext(ctx, query)
 	if err != nil {
-		return nil, fmt.Errorf("%s %w Cloud not list clients", op, err)
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	defer rows.Close()
 
@@ -158,12 +174,21 @@ func (cr *clientRepository) Clients(ctx context.Context) ([]models.Client, error
 		var client models.Client
 		err := rows.Scan(&client.ID, &client.ClientName, &client.Version, &client.Image, &client.CPU, &client.Memory, &client.Priority, &client.NeedRestart, &client.SpawnedAt, &client.CreatedAt, &client.UpdatedAt)
 		if err != nil {
-			return nil, fmt.Errorf("%s %w Cloud not scan client", op, err)
+			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 		clients = append(clients, client)
 	}
 
 	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	jsonData, err := json.Marshal(clients)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	err = cr.rdb.Set(ctx, cacheKey, jsonData, 10*time.Minute).Err()
+	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
