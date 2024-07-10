@@ -69,8 +69,8 @@ func (cr *clientRepository) ClientID(id int64) (*models.Client, error) {
 	return &client, nil
 }
 
-func (cr *clientRepository) UpdateClient(id int64, updateParams map[string]interface{}) error {
-	const op = "repository.client.UpdateClient"
+func (cr *clientRepository) Update(id int64, updateParams map[string]interface{}) error {
+	const op = "repository.client.Update"
 
 	if len(updateParams) == 0 {
 		return fmt.Errorf("%s No updates provider", op)
@@ -96,4 +96,46 @@ func (cr *clientRepository) UpdateClient(id int64, updateParams map[string]inter
 	}
 
 	return nil
+}
+
+func (cr *clientRepository) Delete(id int64) error {
+	const op = "repository.client.Delete"
+
+	query := `
+	DELETE FROM clients 
+	WHERE id = $1
+	`
+
+	_, err := cr.db.Exec(query, id)
+	if err != nil {
+		return fmt.Errorf("%s %w Cloud not delete client", op, err)
+	}
+
+	return nil
+}
+
+func (cr *clientRepository) Clients() ([]models.Client, error) {
+	const op = "repository.client.Clients"
+
+	query := `
+		SELECT * FROM clients
+	`
+
+	rows, err := cr.db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("%s %w Cloud not list clients", op, err)
+	}
+	defer rows.Close()
+
+	var clients []models.Client
+	for rows.Next() {
+		var client models.Client
+		err := rows.Scan(&client)
+		if err != nil {
+			return nil, fmt.Errorf("%s %w Cloud not scan client", op, err)
+		}
+		clients = append(clients, client)
+	}
+
+	return clients, nil
 }
