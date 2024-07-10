@@ -9,6 +9,11 @@ import (
 )
 
 type ClientRepository interface {
+	Create(client *models.Client) (int64, error)
+	ClientByID(id int64) (*models.Client, error)
+	Update(id int64, updateParams map[string]interface{}) error
+	Delete(id int64) error
+	Clients() ([]models.Client, error)	
 }
 
 type clientRepository struct {
@@ -49,7 +54,7 @@ func (cr *clientRepository) Create(client *models.Client) (int64, error) {
 	return id, nil
 }
 
-func (cr *clientRepository) ClientID(id int64) (*models.Client, error) {
+func (cr *clientRepository) ClientByID(id int64) (*models.Client, error) {
 	const op = "repository.client.ClientID"
 
 	query := `
