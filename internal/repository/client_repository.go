@@ -3,7 +3,9 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"test-task/internal/models"
+	"time"
 )
 
 type ClientRepository interface {
@@ -17,7 +19,7 @@ func NewClientRepository(db *sql.DB) ClientRepository {
 	return &clientRepository{db: db}
 }
 
-func (r *clientRepository) Create(client *models.Client) (int64, error) {
+func (cr *clientRepository) Create(client *models.Client) (int64, error) {
 	const op = "repository.client.Create"
 
 	query := `
@@ -27,7 +29,7 @@ func (r *clientRepository) Create(client *models.Client) (int64, error) {
 	`
 
 	var id int64
-	err := r.db.QueryRow(
+	err := cr.db.QueryRow(
 		query,
 		client.ClientName,
 		client.Version,
@@ -41,8 +43,57 @@ func (r *clientRepository) Create(client *models.Client) (int64, error) {
 		client.UpdatedAt,
 	).Scan(&id)
 	if err != nil {
-		return 0, fmt.Errorf("Cloud not create client %s %w", op, err)
+		return 0, fmt.Errorf("%s %w Cloud not create client", op, err)
 	}
 
 	return id, nil
+}
+
+func (cr *clientRepository) ClientID(id int64) (*models.Client, error) {
+	const op = "repository.client.ClientID"
+
+	query := `
+		SELECT * from clients
+		WHERE id = $1
+	`
+
+	var client models.Client
+	err := cr.db.QueryRow(query, id).Scan(&client)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("%s %w Cloud not get client", op, err)
+	}
+
+	return &client, nil
+}
+
+func (cr *clientRepository) UpdateClient(id int64, updateParams map[string]interface{}) error {
+	const op = "repository.client.UpdateClient"
+
+	if len(updateParams) == 0 {
+		return fmt.Errorf("%s No updates provider", op)
+	}
+
+	setClauses := make([]string, 0, len(updateParams))
+	args := make([]interface{}, 0, len(updateParams)+1)
+	i := 1
+
+	for column, value := range updateParams {
+		setClauses = append(setClauses, fmt.Sprintf("%s = %d", column, i))
+		args = append(args, value)
+		i++
+	}
+
+	setClause := strings.Join(setClauses, ", ")
+	query := fmt.Sprintf("UPDATE clients SET %s, updated_at = $%d WHERE id = $%d", setClause, i, i+1)
+	args = append(args, time.Now(), id)
+
+	_, err := cr.db.Exec(query, args...)
+	if err != nil {
+		return fmt.Errorf("%s %w Cloud not update client", op, err)
+	}
+
+	return nil
 }
