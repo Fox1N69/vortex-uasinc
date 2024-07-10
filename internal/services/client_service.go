@@ -3,6 +3,7 @@ package service
 import (
 	"test-task/internal/models"
 	"test-task/internal/repository"
+	"time"
 )
 
 type ClientService interface {
@@ -41,4 +42,19 @@ func (cs *clientService) Delete(id int64) error {
 
 func (cs *clientService) Clients() ([]models.Client, error) {
 	return cs.repository.Clients()
+}
+
+func (cs *clientService) PeriodicCheck() {
+	ticker := time.NewTicker(5 * time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			cs.checkAndDeployPods()
+		}
+	}
+}
+
+func (cs *clientService) checkAndDeployPods() {
+	// Реализация проверки статусов алгоритмов и управления pod'ами
 }
