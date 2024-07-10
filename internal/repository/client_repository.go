@@ -13,7 +13,7 @@ type ClientRepository interface {
 	ClientByID(id int64) (*models.Client, error)
 	Update(id int64, updateParams map[string]interface{}) error
 	Delete(id int64) error
-	Clients() ([]models.Client, error)	
+	Clients() ([]models.Client, error)
 }
 
 type clientRepository struct {
