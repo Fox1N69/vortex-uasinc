@@ -2,6 +2,7 @@ package api
 
 import (
 	"test-task/infra"
+	"test-task/internal/api/algosync"
 	"test-task/internal/manager"
 	"test-task/pkg/http/middleware"
 	"test-task/pkg/http/request"
@@ -47,6 +48,18 @@ func (c *server) handlers() {
 }
 
 func (c *server) v1() {
+	clientHandler := algosync.NewClientHandler(c.service.ClientService())
+
+	api := c.gin.Group("/api")
+	{
+		client := api.Group("/client")
+		{
+			client.POST("/add", clientHandler.AddClient)
+			client.PATCH("/:id", clientHandler.UpdateClient)
+			client.DELETE("/:id", clientHandler.DeleteClient)
+			client.PATCH("/algorithm/:id", clientHandler.UpdateAlgorithmStatus)
+		}
+	}
 
 	c.gin.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 }
