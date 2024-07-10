@@ -120,10 +120,10 @@ func (i *infra) PSQLClient() *postgres.PSQLClient {
 	port := config.GetString("port")
 	name := config.GetString("name")
 
-	client := postgres.NewPSQLClient()
-	client.Connect(user, pass, host, port, name)
+	psqlClient := postgres.NewPSQLClient()
+	psqlClient.Connect(user, pass, host, port, name)
 
-	return client
+	return psqlClient
 }
 
 func (i *infra) RunSQLMigrations() {

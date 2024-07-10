@@ -28,7 +28,7 @@ func (s *PSQLClient) Connect(user, password, host, port, dbname string) error {
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, dbname)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		return fmt.Errorf("%s %w", op, err)
+		return err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -73,6 +73,7 @@ func (s *PSQLClient) SqlMigrate() error {
 	if err != nil && err != migrate.ErrNoChange {
 		return fmt.Errorf("%s %w", op, err)
 	}
+
 	log.Println("SQL migrations completed")
 	return nil
 }
