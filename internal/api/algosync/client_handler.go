@@ -14,6 +14,7 @@ type ClientHandler interface {
 	UpdateClient(c *gin.Context)
 	DeleteClient(c *gin.Context)
 	UpdateAlgorithmStatus(c *gin.Context)
+	CreateAlgorithm(c *gin.Context)
 }
 
 type clientHandler struct {
@@ -112,4 +113,21 @@ func (ch *clientHandler) UpdateAlgorithmStatus(c *gin.Context) {
 		"id":      algorithmID,
 		"message": "algorithm updated success",
 	})
+}
+
+func (ch *clientHandler) CreateAlgorithm(c *gin.Context) {
+	var algo models.AlgorithmStatus
+	c.ShouldBindJSON(&algo)
+
+	id, err := ch.service.CreateAlgorithm(&algo)
+	if err != nil {
+		response.New(c).Error(501, err)
+		return
+	}
+
+	c.JSON(200, id)
+}
+
+func (ch *clientHandler) StartSyncAlgo(c *gin.Context) {
+
 }

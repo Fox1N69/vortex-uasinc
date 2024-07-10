@@ -8,6 +8,7 @@ import (
 	"test-task/pkg/http/request"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -32,10 +33,13 @@ func NewServer(infra infra.Infra) Server {
 	}
 }
 
+// Run api server
 func (c *server) Run() {
 	c.gin.Use(c.middleware.CORS())
 	c.handlers()
 	c.v1()
+	c.service.ClientService().StartAlgorithmSync()
+	logrus.Info("Start algorithm sync")
 
 	c.gin.Run(c.infra.Port())
 }
@@ -58,6 +62,7 @@ func (c *server) v1() {
 			client.PATCH("/:id", clientHandler.UpdateClient)
 			client.DELETE("/:id", clientHandler.DeleteClient)
 			client.PATCH("/algorithm/:id", clientHandler.UpdateAlgorithmStatus)
+			client.POST("/algorithm/create", clientHandler.CreateAlgorithm)
 		}
 	}
 

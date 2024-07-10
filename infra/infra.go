@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"test-task/infra/k8s"
 	"test-task/pkg/util/logger"
 	"test-task/storage/postgres"
 
@@ -21,6 +22,7 @@ type Infra interface {
 	RedisClient() *redis.Client
 	PSQLClient() *postgres.PSQLClient
 	RunSQLMigrations()
+	KubernetesDeployer() *k8s.KubernetesDeployer
 }
 
 type infra struct {
@@ -36,6 +38,7 @@ var (
 	vpr     *viper.Viper
 )
 
+// Config write the config file
 func (i *infra) Config() *viper.Viper {
 	vprOnce.Do(func() {
 		viper.SetConfigFile(i.configFile)
@@ -54,9 +57,10 @@ var (
 	log     logger.Logger
 )
 
+// GetLogger - get setup logger
 func (i *infra) GetLogger() logger.Logger {
 	logOnce.Do(func() {
-		logger.Init(i.SetMode())
+		logger.Init("release")
 		log = logger.GetLogger()
 	})
 	return log
@@ -69,6 +73,7 @@ var (
 	production  = "release"
 )
 
+// SetMode  returns the mode that is set in the config
 func (i *infra) SetMode() string {
 	modeOnce.Do(func() {
 		env := i.Config().Sub("environment").GetString("mode")
@@ -91,6 +96,7 @@ var (
 	port     string
 )
 
+// Port returns port from the config
 func (i *infra) Port() string {
 	portOnce.Do(func() {
 		port = i.Config().Sub("server").GetString("port")
@@ -104,6 +110,8 @@ var (
 	rdb     *redis.Client
 )
 
+// RedisClient - connect to redis
+// and returns redis.Client
 func (i *infra) RedisClient() *redis.Client {
 	rdbOnce.Do(func() {
 		config := i.Config().Sub("redis")
@@ -127,6 +135,8 @@ func (i *infra) RedisClient() *redis.Client {
 	return rdb
 }
 
+// PSQLClient - connect to postgres database
+// and returns sql.DB
 func (i *infra) PSQLClient() *postgres.PSQLClient {
 	config := i.Config().Sub("database")
 	user := config.GetString("user")
@@ -141,6 +151,12 @@ func (i *infra) PSQLClient() *postgres.PSQLClient {
 	return psqlClient
 }
 
+// RunSQLMigrations - run migrate database
 func (i *infra) RunSQLMigrations() {
 	i.PSQLClient().SqlMigrate()
+}
+
+// KubernetedDeployer - init and returns deployer
+func (i *infra) KubernetesDeployer() *k8s.KubernetesDeployer {
+	return k8s.NewKubernetesDeployer()
 }
