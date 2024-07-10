@@ -50,7 +50,7 @@ func Init(mode string) {
 				return fmt.Sprintf("%s()", f.Function), fmt.Sprintf("%s %d", filename, f.Line)
 			},
 		}
-	case "prod":
+	case "release":
 		l.Formatter = &logrus.TextFormatter{
 			FullTimestamp: true,
 			ForceColors:   true,

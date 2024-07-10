@@ -28,7 +28,7 @@ func (s *PSQLClient) Connect(user, password, host, port, dbname string) error {
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, dbname)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s %w", op, err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
