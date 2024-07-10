@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"test-task/pkg/util/logger"
 	"test-task/storage/postgres"
 
 	"github.com/gin-gonic/gin"
@@ -14,6 +15,7 @@ import (
 
 type Infra interface {
 	Config() *viper.Viper
+	GetLogger() logger.Logger
 	SetMode() string
 	Port() string
 	RedisClient() *redis.Client
@@ -45,6 +47,19 @@ func (i *infra) Config() *viper.Viper {
 	})
 
 	return vpr
+}
+
+var (
+	logOnce sync.Once
+	log     logger.Logger
+)
+
+func (i *infra) GetLogger() logger.Logger {
+	logOnce.Do(func() {
+		logger.Init(i.SetMode())
+		log = logger.GetLogger()
+	})
+	return log
 }
 
 var (

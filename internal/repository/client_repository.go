@@ -80,15 +80,15 @@ func (cr *clientRepository) Update(id int64, updateParams map[string]interface{}
 	const op = "repository.client.Update"
 
 	if len(updateParams) == 0 {
-		return fmt.Errorf("%s No updates provider", op)
+		return fmt.Errorf("%s No updates provided", op)
 	}
 
 	setClauses := make([]string, 0, len(updateParams))
-	args := make([]interface{}, 0, len(updateParams)+1)
+	args := make([]interface{}, 0, len(updateParams)+2)
 	i := 1
 
 	for column, value := range updateParams {
-		setClauses = append(setClauses, fmt.Sprintf("%s = %d", column, i))
+		setClauses = append(setClauses, fmt.Sprintf("%s = $%d", column, i))
 		args = append(args, value)
 		i++
 	}
