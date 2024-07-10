@@ -14,6 +14,8 @@ type ClientRepository interface {
 	Update(id int64, updateParams map[string]interface{}) error
 	Delete(id int64) error
 	Clients() ([]models.Client, error)
+	AlgorithmStatuses() ([]models.AlgorithmStatus, error)
+	UpdateAlgorithmStatus(id int64, status map[string]interface{}) error
 }
 
 type clientRepository struct {
@@ -143,4 +145,60 @@ func (cr *clientRepository) Clients() ([]models.Client, error) {
 	}
 
 	return clients, nil
+}
+
+func (cr *clientRepository) AlgorithmStatuses() ([]models.AlgorithmStatus, error) {
+	const op = "repository.client.AlgorithmStatuses"
+
+	query := `
+		SELECT * from algorithm_status
+	`
+
+	rows, err := cr.db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("%s %w Cloud not list clients", op, err)
+	}
+	defer rows.Close()
+
+	var statuses []models.AlgorithmStatus
+	for rows.Next() {
+		var status models.AlgorithmStatus
+		err := rows.Scan(&status)
+		if err != nil {
+			return nil, fmt.Errorf("%s %w Clound not scan algorithm", op, err)
+		}
+		statuses = append(statuses, status)
+	}
+
+	return statuses, nil
+}
+
+func (cr *clientRepository) UpdateAlgorithmStatus(id int64, status map[string]interface{}) error {
+	const op = "repository.client.UpdateAlgorithmStatus"
+
+	if len(status) == 0 {
+		return fmt.Errorf("%s No updates provider", op)
+	}
+
+	setClauses := make([]string, 0, len(status))
+	args := make([]interface{}, 0, len(status)+1)
+	i := 1
+
+	for column, value := range status {
+		setClauses = append(setClauses, fmt.Sprintf("%s = %d", column, i))
+		args = append(args, value)
+		i++
+	}
+
+	setClause := strings.Join(setClauses, ", ")
+	query := fmt.Sprintf("UPDATE algorithm_status SET %s, updated_at = $%d WHERE id = $%d", setClause, i, i+1)
+	args = append(args, time.Now(), id)
+
+	_, err := cr.db.Exec(query, args...)
+	if err != nil {
+		return fmt.Errorf("%s %w Cloud not update algorithm", op, err)
+	}
+
+	return nil
+
 }
