@@ -49,7 +49,7 @@ func (ch *clientHandler) AddClient(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"message:": "create client success", "id": id})
+	c.JSON(201, gin.H{"message:": "create client success", "id": id})
 }
 
 // @Summary UpdateClient an existing client

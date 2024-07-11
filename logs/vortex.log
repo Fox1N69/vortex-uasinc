@@ -2906,3 +2906,8 @@ The connection to the server 127.0.0.1:57815 was refused - did you specify the r
 [36mINFO[0m[2024-07-11T21:41:01+05:00]api.go:51 test-task/internal/api.(*server).Run() Start algorithm sync                         
 [36mINFO[0m[2024-07-11T21:41:01+05:00]client_service.go:75 test-task/internal/services.(*clientService).StartAlgorithmSync() service.client.StartAlgorithmSync: Starting synchronization process... 
 [36mINFO[0m[2024-07-11T21:41:01+05:00]client_service.go:85 test-task/internal/services.(*clientService).StartAlgorithmSync() service.client.StartAlgorithmSync: Synchronization process started 
+[36mINFO[0m[2024-07-11T21:41:54+05:00]main.go:34 main.main() Connect to PSQLClient                        
+[36mINFO[0m[2024-07-11T21:41:54+05:00]main.go:36 main.main() Sql migrations compelet                      
+[36mINFO[0m[2024-07-11T21:41:54+05:00]api.go:51 test-task/internal/api.(*server).Run() Start algorithm sync                         
+[36mINFO[0m[2024-07-11T21:41:54+05:00]client_service.go:75 test-task/internal/services.(*clientService).StartAlgorithmSync() service.client.StartAlgorithmSync: Starting synchronization process... 
+[36mINFO[0m[2024-07-11T21:41:54+05:00]client_service.go:85 test-task/internal/services.(*clientService).StartAlgorithmSync() service.client.StartAlgorithmSync: Synchronization process started 
