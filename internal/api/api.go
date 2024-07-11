@@ -31,7 +31,11 @@ func NewServer(infra infra.Infra) Server {
 	}
 }
 
-// Run api server
+// Run starts the server and initializes necessary middleware and handlers.
+// It sets up rate limiting based on the configured RPS limit,
+// enables CORS middleware, registers application handlers, and API routes.
+// It also starts a background service to synchronize algorithm statuses.
+// Finally, it logs the start of algorithm synchronization and listens on the configured port.
 func (c *server) Run() {
 	c.gin.Use(c.middleware.RPSLimit(c.infra.Config().GetInt("rps_limit")))
 
@@ -45,6 +49,8 @@ func (c *server) Run() {
 	c.gin.Run(c.infra.Port())
 }
 
+// handlers sets up custom route handlers for specific routes on the server.
+// It assigns default handlers for handling unknown routes and an index route.
 func (c *server) handlers() {
 	h := request.DefaultHandler()
 
@@ -52,6 +58,9 @@ func (c *server) handlers() {
 	c.gin.GET("/", h.Index)
 }
 
+// v1 configures versioned API endpoints (v1) for client operations.
+// It sets up routes for client management operations such as adding, updating, deleting clients,
+// and updating algorithm statuses associated with clients.
 func (c *server) v1() {
 	clientHandler := algosync.NewClientHandler(c.service.ClientService())
 

@@ -24,6 +24,8 @@ var (
 	clientRepository     repository.ClientRepository
 )
 
+// ClientRepository returns an instance of the client repository.
+// It lazily initializes the repository on the first call using the PSQLClient from the infrastructure.
 func (rm *repoManager) ClientRepository() repository.ClientRepository {
 	clientRepositoryOnce.Do(func() {
 		clientRepository = repository.NewClientRepository(rm.infra.PSQLClient().DB)

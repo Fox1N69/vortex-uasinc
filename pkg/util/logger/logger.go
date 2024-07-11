@@ -21,6 +21,17 @@ type Logger struct {
 	*logrus.Entry
 }
 
+// Fire implements the logrus.Hook interface method to write log entries to
+// multiple writers configured in writeHook.
+//
+// It converts the log entry into a string representation and writes it to each
+// writer in hook.Writer.
+//
+// Parameters:
+// - entry: Logrus log entry containing the log message and metadata.
+//
+// Returns an error if there was an issue converting the log entry to string
+// or if there was an error while writing to any of the writers.
 func (hook *writeHook) Fire(entry *logrus.Entry) error {
 	line, err := entry.String()
 	if err != nil {
@@ -34,10 +45,20 @@ func (hook *writeHook) Fire(entry *logrus.Entry) error {
 	return err
 }
 
+// Levels returns the log levels for which this hook should be triggered.
+//
+// It returns the log levels configured in hook.LogLevels.
 func (hook *writeHook) Levels() []logrus.Level {
 	return hook.LogLevels
 }
 
+// init initializes the logging configuration using logrus library.
+//
+// It sets up a new logrus logger with caller reporting enabled, colorful output,
+// and a custom CallerPrettyfier function. It creates a "logs" directory if it doesn't
+// exist, opens or creates the "logs/all.log" file for logging, and configures log levels.
+//
+// Panics if there is an error while creating the "logs" directory or opening the log file.
 func init() {
 	l := logrus.New()
 	l.SetReportCaller(true)
@@ -73,10 +94,20 @@ func init() {
 	e = logrus.NewEntry(l)
 }
 
+// GetLogger returns a Logger instance initialized with the global logrus entry (e).
+//
+// It provides access to the global logger instance configured in the application.
 func GetLogger() Logger {
 	return Logger{e}
 }
 
+// GetLoggerWithFild returns a new Logger instance with an additional field added.
+//
+// Parameters:
+// - k: Key of the field.
+// - v: Value of the field.
+//
+// Returns a new Logger instance with the specified field added.
 func (l *Logger) GetLoggerWithFild(k string, v interface{}) Logger {
 	return Logger{l.WithField(k, v)}
 }

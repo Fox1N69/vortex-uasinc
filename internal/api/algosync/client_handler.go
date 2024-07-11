@@ -25,6 +25,15 @@ func NewClientHandler(clientService service.ClientService) ClientHandler {
 	return &clientHandler{service: clientService}
 }
 
+// @Summary Add new client to the database
+// @Description AddClient creates a new client with the provided data.
+// @Accept json
+// @Produce json
+// @Param body body models.Client true "Client object that needs to be added"
+// @Success 200 {object} gin.H{"message:": "create client success", "id": int64} "Successfully created client"
+// @Failure 400 {object} gin.H "Bad request"
+// @Failure 501 {object} gin.H "Internal server error"
+// @Router /api/client/add [post]
 func (ch *clientHandler) AddClient(c *gin.Context) {
 	response := response.New(c)
 	var client models.Client
@@ -43,6 +52,15 @@ func (ch *clientHandler) AddClient(c *gin.Context) {
 	c.JSON(200, gin.H{"message:": "create client success", "id": id})
 }
 
+// @Summary Update an existing client
+// @Description UpdateClient updates the specified client with new data.
+// @Accept json
+// @Produce json
+// @Param id path int true "Client ID to update"
+// @Param body body map[string]interface{} true "Updated client data"
+// @Success 200 {object} gin.H{"id": int64, "message": "client update success"} "Successfully updated client"
+// @Failure 400 {object} gin.H "Bad request"
+// @Router /api/client/{id} [patch]
 func (ch *clientHandler) UpdateClient(c *gin.Context) {
 	response := response.New(c)
 
@@ -70,6 +88,15 @@ func (ch *clientHandler) UpdateClient(c *gin.Context) {
 	})
 }
 
+// @Summary Delete a client
+// @Description DeleteClient deletes the client with the specified ID.
+// @Accept json
+// @Produce json
+// @Param id path int true "Client ID to delete"
+// @Success 200 {object} gin.H{"id": int64, "message": "client deleted success"} "Successfully deleted client"
+// @Failure 400 {object} gin.H "Bad request"
+// @Failure 501 {object} gin.H "Internal server error"
+// @Router /api/client/{id} [delete]
 func (ch *clientHandler) DeleteClient(c *gin.Context) {
 	response := response.New(c)
 
@@ -90,6 +117,16 @@ func (ch *clientHandler) DeleteClient(c *gin.Context) {
 	})
 }
 
+// @Summary Update algorithm status
+// @Description UpdateAlgorithmStatus updates the algorithm status for the specified client.
+// @Accept json
+// @Produce json
+// @Param id path int true "Algorithm ID to update"
+// @Param body body map[string]interface{} true "Updated algorithm status data"
+// @Success 200 {object} gin.H{"id": int64, "message": "algorithm updated success"} "Successfully updated algorithm status"
+// @Failure 400 {object} gin.H "Bad request"
+// @Failure 501 {object} gin.H "Internal server error"
+// @Router /api/client/algorithm/{id} [patch]
 func (ch *clientHandler) UpdateAlgorithmStatus(c *gin.Context) {
 	response := response.New(c)
 

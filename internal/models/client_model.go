@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// Client represents a client entity in the system.
 type Client struct {
 	ID          int64     `json:"id"`
 	ClientName  string    `json:"client_name"`

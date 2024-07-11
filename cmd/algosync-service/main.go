@@ -7,7 +7,6 @@ import (
 	"test-task/internal/api"
 )
 
-// User algoritm sync
 func main() {
 
 	// Init config

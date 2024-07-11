@@ -38,7 +38,8 @@ var (
 	vpr     *viper.Viper
 )
 
-// Config write the config file
+// Config returns the Viper configuration instance.
+// It reads and initializes configuration from the specified configFile path.
 func (i *infra) Config() *viper.Viper {
 	vprOnce.Do(func() {
 		viper.SetConfigFile(i.configFile)
@@ -52,7 +53,7 @@ func (i *infra) Config() *viper.Viper {
 	return vpr
 }
 
-// GetLogger - get setup logger
+// GetLogger returns the application-wide logger instance.
 func (i *infra) GetLogger() logger.Logger {
 	log := logger.GetLogger()
 	return log
@@ -65,7 +66,8 @@ var (
 	production  = "release"
 )
 
-// SetMode  returns the mode that is set in the config
+// SetMode sets the application mode based on the environment configuration.
+// It retrieves the mode from the environment settings and configures Gin framework accordingly.
 func (i *infra) SetMode() string {
 	modeOnce.Do(func() {
 		env := i.Config().Sub("environment").GetString("mode")
@@ -88,7 +90,8 @@ var (
 	port     string
 )
 
-// Port returns port from the config
+// Port retrieves the server port from the configuration.
+// It initializes the port once and returns it prefixed with ':'.
 func (i *infra) Port() string {
 	portOnce.Do(func() {
 		port = i.Config().Sub("server").GetString("port")
@@ -102,8 +105,8 @@ var (
 	rdb     *redis.Client
 )
 
-// RedisClient - connect to redis
-// and returns redis.Client
+// RedisClient returns a Redis client instance configured based on the environment settings.
+// It initializes the Redis client once using the configured address, password, and database.
 func (i *infra) RedisClient() *redis.Client {
 	rdbOnce.Do(func() {
 		config := i.Config().Sub("redis")
@@ -127,8 +130,8 @@ func (i *infra) RedisClient() *redis.Client {
 	return rdb
 }
 
-// PSQLClient - connect to postgres database
-// and returns sql.DB
+// PSQLClient returns a PostgreSQL client instance initialized with the configuration settings.
+// It creates a new PostgreSQL client and establishes a connection using provided credentials.
 func (i *infra) PSQLClient() *postgres.PSQLClient {
 	config := i.Config().Sub("database")
 	user := config.GetString("user")
@@ -143,12 +146,14 @@ func (i *infra) PSQLClient() *postgres.PSQLClient {
 	return psqlClient
 }
 
-// RunSQLMigrations - run migrate database
+// RunSQLMigrations runs SQL migrations on the configured PostgreSQL database.
+// It triggers SQL migrations using the initialized PostgreSQL client.
 func (i *infra) RunSQLMigrations() {
 	i.PSQLClient().SqlMigrate()
 }
 
-// KubernetedDeployer - init and returns deployer
+// KubernetesDeployer returns a new instance of KubernetesDeployer.
+// It initializes a Kubernetes deployer used for managing deployments.
 func (i *infra) KubernetesDeployer() k8s.KubernetesDeployer {
 	return k8s.NewKubernetesDeployer()
 }

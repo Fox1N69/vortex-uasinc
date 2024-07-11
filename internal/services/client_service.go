@@ -96,6 +96,12 @@ func (cs *clientService) syncAlgorithms() {
 	}
 }
 
+// syncPodsForClient synchronizes pods for a given client based on their algorithm status.
+// It creates or deletes Kubernetes pods depending on the algorithm status flags VWAP, TWAP, and HFT.
+// For each algorithm type, a pod is created if the corresponding flag is true in algoStatus;
+// otherwise, the pod is deleted.
+// Pod names are generated based on the client's ID and algorithm type (e.g., "vwap-123").
+// If pod creation or deletion fails, an error is logged.
 func (cs *clientService) syncPodsForClient(client models.Client, algoStatus models.AlgorithmStatus) {
 	// VWAP
 	vwapPodName := fmt.Sprintf("vwap-%d", client.ID)

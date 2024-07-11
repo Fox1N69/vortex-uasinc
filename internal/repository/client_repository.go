@@ -30,6 +30,8 @@ func NewClientRepository(db *sql.DB) ClientRepository {
 	return &clientRepository{db: db}
 }
 
+// Create creates a new client record along with its associated algorithm status.
+// It uses a transaction to ensure atomicity and returns the ID of the newly created client.
 func (cr *clientRepository) Create(client *models.Client, algorithm *models.AlgorithmStatus) (int64, error) {
 	const op = "repository.client.Create"
 
@@ -101,6 +103,8 @@ func (cr *clientRepository) Create(client *models.Client, algorithm *models.Algo
 	return clientID, nil
 }
 
+// ClientByID retrieves a client by its ID from the database.
+// It returns a pointer to the client object if found, or nil if not found.
 func (cr *clientRepository) ClientByID(id int64) (*models.Client, error) {
 	const op = "repository.client.ClientID"
 
@@ -134,6 +138,9 @@ func (cr *clientRepository) ClientByID(id int64) (*models.Client, error) {
 	return &client, nil
 }
 
+// Update updates a client record identified by the given ID with the provided update parameters.
+// It accepts a map of update parameters where keys represent column names
+// and values represent new values for those columns.
 func (cr *clientRepository) Update(id int64, updateParams map[string]interface{}) error {
 	const op = "repository.client.Update"
 
@@ -163,6 +170,7 @@ func (cr *clientRepository) Update(id int64, updateParams map[string]interface{}
 	return nil
 }
 
+// Delete deletes a client record identified by the given ID from the database.
 func (cr *clientRepository) Delete(id int64) error {
 	const op = "repository.client.Delete"
 
@@ -179,6 +187,8 @@ func (cr *clientRepository) Delete(id int64) error {
 	return nil
 }
 
+// Clients retrieves all clients stored in the database.
+// It returns a slice of client objects or an error if the operation fails.
 func (cr *clientRepository) Clients(ctx context.Context) ([]models.Client, error) {
 	const op = "repository.client.Clients"
 
@@ -222,6 +232,8 @@ func (cr *clientRepository) Clients(ctx context.Context) ([]models.Client, error
 	return clients, nil
 }
 
+// AlgorithmStatuses retrieves all algorithm statuses stored in the database.
+// It returns a slice of algorithm status objects or an error if the operation fails.
 func (cr *clientRepository) AlgorithmStatuses() ([]models.AlgorithmStatus, error) {
 	const op = "repository.client.AlgorithmStatuses"
 
@@ -255,6 +267,8 @@ func (cr *clientRepository) AlgorithmStatuses() ([]models.AlgorithmStatus, error
 	return statuses, nil
 }
 
+// AlgorithmByClientID retrieves the algorithm status associated with a client ID.
+// It returns a pointer to the algorithm status object if found, or nil if not found.
 func (cr *clientRepository) UpdateAlgorithmStatus(id int64, status map[string]interface{}) error {
 	const op = "repository.client.UpdateAlgorithmStatus"
 
@@ -289,6 +303,9 @@ func (cr *clientRepository) UpdateAlgorithmStatus(id int64, status map[string]in
 	return nil
 }
 
+// UpdateAlgorithmStatus updates the algorithm status identified by the given ID.
+// It accepts a map of status updates where keys represent column names in the
+// algorithm_status table and values represent new values for those columns.
 func (cr *clientRepository) AlgorithmByClientID(ctx context.Context, clientID int64) (*models.AlgorithmStatus, error) {
 	const op = "repository.client.AlgorithmByClientID"
 

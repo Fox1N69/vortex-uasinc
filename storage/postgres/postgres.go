@@ -23,7 +23,20 @@ func NewPSQLClient() *PSQLClient {
 	return &PSQLClient{}
 }
 
-// Connect establishes a connection to the PostgreSQL database
+// Connect establishes a connection to the PostgreSQL database using the provided credentials.
+//
+// It sets up connection pooling with maximum open and idle connections,
+// and sets the maximum lifetime of connections.
+//
+// Parameters:
+// - user: PostgreSQL username.
+// - password: Password for the PostgreSQL user.
+// - host: PostgreSQL server host address.
+// - port: PostgreSQL server port.
+// - dbname: Name of the PostgreSQL database to connect to.
+//
+// Returns an error if the connection cannot be established or if there is an issue
+// with setting up the connection pool or pinging the database.
 func (s *PSQLClient) Connect(user, password, host, port, dbname string) error {
 	const op = "storage.postgres.Connect()"
 
@@ -33,10 +46,9 @@ func (s *PSQLClient) Connect(user, password, host, port, dbname string) error {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	// Настройка пула подключений
-	db.SetMaxOpenConns(100)          // Максимальное количество открытых соединений
-	db.SetMaxIdleConns(50)           // Максимальное количество простаивающих соединений
-	db.SetConnMaxLifetime(time.Hour) // Максимальное время жизни соединения
+	db.SetMaxOpenConns(100)
+	db.SetMaxIdleConns(50)
+	db.SetConnMaxLifetime(time.Hour)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -50,7 +62,10 @@ func (s *PSQLClient) Connect(user, password, host, port, dbname string) error {
 	return nil
 }
 
-// Close terminates the connection to the database
+// Close closes the connection to the PostgreSQL database.
+//
+// It checks if there is an active database connection (s.DB) and attempts to close it.
+// Logs an error message if there was an issue closing the connection.
 func (s *PSQLClient) Close() {
 	if s.DB != nil {
 		if err := s.DB.Close(); err != nil {
@@ -61,7 +76,13 @@ func (s *PSQLClient) Close() {
 	}
 }
 
-// SqlMigrate performs database schema migrations using Golang Migrate
+// SqlMigrate runs database migrations for PostgreSQL using the provided database connection.
+//
+// It initializes the migration driver with the current database instance, and then
+// applies all available migrations from the specified migrations directory ("migrations").
+//
+// Returns an error if the database connection (s.DB) is nil, if there is an issue
+// initializing the migration driver, or if there are errors during the migration process.
 func (s *PSQLClient) SqlMigrate() error {
 	const op = "storage.postgres.SqlMigrate()"
 
