@@ -9,8 +9,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	swaggerfiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type Server interface {
@@ -35,6 +33,7 @@ func NewServer(infra infra.Infra) Server {
 
 // Run api server
 func (c *server) Run() {
+	c.gin.Use(c.middleware.RPSLimit(100))
 	c.gin.Use(c.middleware.CORS())
 	c.handlers()
 	c.v1()
@@ -59,13 +58,10 @@ func (c *server) v1() {
 	{
 		client := api.Group("/client")
 		{
-			client.GET("/", clientHandler.GetAll)
 			client.POST("/add", clientHandler.AddClient)
 			client.PATCH("/:id", clientHandler.UpdateClient)
 			client.DELETE("/:id", clientHandler.DeleteClient)
 			client.PATCH("/algorithm/:id", clientHandler.UpdateAlgorithmStatus)
 		}
 	}
-
-	c.gin.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 }

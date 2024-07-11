@@ -9,6 +9,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 )
 
@@ -29,15 +30,20 @@ func (s *PSQLClient) Connect(user, password, host, port, dbname string) error {
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, dbname)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		return fmt.Errorf("%s %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
+
+	// Настройка пула подключений
+	db.SetMaxOpenConns(100)         // Максимальное количество открытых соединений
+	db.SetMaxIdleConns(50)          // Максимальное количество простаивающих соединений
+	db.SetConnMaxLifetime(time.Hour) // Максимальное время жизни соединения
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := db.PingContext(ctx); err != nil {
 		db.Close()
-		return fmt.Errorf("%s %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	s.DB = db

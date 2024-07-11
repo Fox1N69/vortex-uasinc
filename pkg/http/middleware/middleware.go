@@ -1,13 +1,17 @@
 package middleware
 
 import (
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/ratelimit"
 )
 
 type Middleware interface {
 	CORS() gin.HandlerFunc
+	RPSLimit(rps int) gin.HandlerFunc
 }
 
 type middleware struct {
@@ -33,5 +37,16 @@ func (m *middleware) CORS() gin.HandlerFunc {
 		}
 
 		c.Next()
+	}
+}
+
+func (m *middleware) RPSLimit(rps int) gin.HandlerFunc {
+	limit := ratelimit.New(rps)
+	prev := time.Now()
+
+	return func(c *gin.Context) {
+		now := limit.Take()
+		log.Printf("Time since last request: %v", now.Sub(prev))
+		prev = now
 	}
 }

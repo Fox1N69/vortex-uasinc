@@ -26,7 +26,7 @@ var (
 
 func (rm *repoManager) ClientRepository() repository.ClientRepository {
 	clientRepositoryOnce.Do(func() {
-		clientRepository = repository.NewClientRepository(rm.infra.PSQLClient().DB, rm.infra.RedisClient())
+		clientRepository = repository.NewClientRepository(rm.infra.PSQLClient().DB)
 	})
 	return clientRepository
 }

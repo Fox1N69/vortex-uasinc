@@ -1,7 +1,6 @@
 package algosync
 
 import (
-	"net/http"
 	"strconv"
 	"test-task/internal/models"
 	service "test-task/internal/services"
@@ -11,7 +10,6 @@ import (
 )
 
 type ClientHandler interface {
-	GetAll(c *gin.Context)
 	AddClient(c *gin.Context)
 	UpdateClient(c *gin.Context)
 	DeleteClient(c *gin.Context)
@@ -24,15 +22,6 @@ type clientHandler struct {
 
 func NewClientHandler(clientService service.ClientService) ClientHandler {
 	return &clientHandler{service: clientService}
-}
-
-func (ch *clientHandler) GetAll(c *gin.Context) {
-	clients, err := ch.service.Clients(c)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch clients"})
-		return
-	}
-	c.JSON(http.StatusOK, clients)
 }
 
 func (ch *clientHandler) AddClient(c *gin.Context) {

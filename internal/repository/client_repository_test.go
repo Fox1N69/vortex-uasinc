@@ -18,9 +18,8 @@ func TestCreate(t *testing.T) {
 	defer db.Close()
 
 	// Initialize a mock Redis client
-	redisClient := &redis.Client{}
 
-	repo := repository.NewClientRepository(db, redisClient)
+	repo := repository.NewClientRepository(db)
 
 	client := &models.Client{
 		ClientName:  "TestClient",
@@ -66,7 +65,7 @@ func TestClientByID(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	repo := repository.NewClientRepository(db, &redis.Client{})
+	repo := repository.NewClientRepository(db)
 
 	expectedClient := &models.Client{
 		ID:          1,
@@ -99,7 +98,7 @@ func TestUpdate(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	repo := repository.NewClientRepository(db, &redis.Client{})
+	repo := repository.NewClientRepository(db)
 
 	updateParams := map[string]interface{}{
 		"client_name": "UpdatedClient",
@@ -120,7 +119,7 @@ func TestDelete(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	repo := repository.NewClientRepository(db, &redis.Client{})
+	repo := repository.NewClientRepository(db)
 
 	mock.ExpectExec("DELETE FROM clients WHERE id = \\$1").
 		WithArgs(1).
@@ -146,7 +145,7 @@ func TestClients(t *testing.T) {
 	_, err = rdb.Ping(context.Background()).Result()
 	assert.NoError(t, err, "failed to ping Redis")
 
-	repo := repository.NewClientRepository(db, rdb) // Inject Redis client
+	repo := repository.NewClientRepository(db) // Inject Redis client
 
 	ctx := context.Background()
 
@@ -205,7 +204,7 @@ func TestAlgorithmStatuses(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	repo := repository.NewClientRepository(db, &redis.Client{})
+	repo := repository.NewClientRepository(db)
 
 	expectedStatuses := []models.AlgorithmStatus{
 		{
@@ -243,7 +242,7 @@ func TestUpdateAlgorithmStatus(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	repo := repository.NewClientRepository(db, &redis.Client{})
+	repo := repository.NewClientRepository(db)
 
 	updateParams := map[string]interface{}{
 		"vwap": true,

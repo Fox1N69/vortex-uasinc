@@ -26,3 +26,12 @@ CREATE TRIGGER update_clients_updated_at
 BEFORE UPDATE ON clients
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
+
+-- Create index for client_name
+CREATE INDEX idx_clients_client_name ON clients(client_name);
+
+-- Create index for version
+CREATE INDEX idx_clients_version ON clients(version);
+
+-- Create index for priority
+CREATE INDEX idx_clients_priority ON clients(priority);
