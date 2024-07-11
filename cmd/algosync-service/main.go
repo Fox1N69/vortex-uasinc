@@ -14,10 +14,10 @@ func main() {
 	// Set project mod
 	i.SetMode()
 
-	//init logger
+	// Get custom logrus logger
 	log := i.GetLogger()
 
-	//start pprof
+	// Start pprof server on port::6060
 	go func() {
 		log.Println(http.ListenAndServe("localhost:6060", nil))
 	}()
