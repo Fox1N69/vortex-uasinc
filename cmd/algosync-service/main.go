@@ -29,9 +29,6 @@ func main() {
 	i.RunSQLMigrations()
 	log.Info("Sql migrations compelet")
 
-	//Connect to redis
-	i.RedisClient()
-
 	// Start api server
 	api.NewServer(i).Run()
 }

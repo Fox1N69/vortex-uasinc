@@ -34,8 +34,8 @@ func (s *PSQLClient) Connect(user, password, host, port, dbname string) error {
 	}
 
 	// Настройка пула подключений
-	db.SetMaxOpenConns(100)         // Максимальное количество открытых соединений
-	db.SetMaxIdleConns(50)          // Максимальное количество простаивающих соединений
+	db.SetMaxOpenConns(100)          // Максимальное количество открытых соединений
+	db.SetMaxIdleConns(50)           // Максимальное количество простаивающих соединений
 	db.SetConnMaxLifetime(time.Hour) // Максимальное время жизни соединения
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -65,12 +65,16 @@ func (s *PSQLClient) Close() {
 func (s *PSQLClient) SqlMigrate() error {
 	const op = "storage.postgres.SqlMigrate()"
 
+	if s.DB == nil {
+		return fmt.Errorf("%s DB is nil", op)
+	}
+
 	driver, err := postgres.WithInstance(s.DB, &postgres.Config{})
 	if err != nil {
 		return fmt.Errorf("%s %w", op, err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://migrations", "postgres", driver)
+	m, err := migrate.NewWithDatabaseInstance("file:///migrations", "postgres", driver)
 	if err != nil {
 		return fmt.Errorf("%s %w", op, err)
 	}
