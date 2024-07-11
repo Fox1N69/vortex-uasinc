@@ -92,18 +92,15 @@ func TestClientService_Create(t *testing.T) {
 	service := service.NewClientService(mockRepo, mockK8sDeployer)
 
 	client := &models.Client{ID: 1, ClientName: "Test Client"}
-	algorithm := &models.AlgorithmStatus{} // Create an empty algorithm status object
+	algorithm := &models.AlgorithmStatus{}
 
-	// Expectations for repository.Create call
 	mockRepo.On("Create", client, algorithm).Return(int64(1), nil)
 
-	// Call the service method
 	id, err := service.Create(client)
 
 	assert.NoError(t, err)
 	assert.Equal(t, int64(1), id)
 
-	// Verify mock expectations
 	mockRepo.AssertExpectations(t)
 }
 func TestClientService_ClientByID(t *testing.T) {
