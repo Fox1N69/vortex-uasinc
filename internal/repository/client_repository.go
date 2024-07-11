@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -338,6 +339,9 @@ func (cr *clientRepository) AlgorithmByClientID(ctx context.Context, clientID in
 	var algorithm models.AlgorithmStatus
 	err := cr.db.QueryRowContext(ctx, query, clientID).Scan(&algorithm.ID, &algorithm.ClientID, &algorithm.VWAP, &algorithm.TWAP, &algorithm.HFT)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, err 
+		}
 		return nil, fmt.Errorf("%s %w", op, err)
 	}
 

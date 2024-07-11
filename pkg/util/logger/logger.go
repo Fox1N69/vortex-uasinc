@@ -38,34 +38,17 @@ func (hook *writeHook) Levels() []logrus.Level {
 	return hook.LogLevels
 }
 
-func Init(mode string) {
+func init() {
 	l := logrus.New()
 	l.SetReportCaller(true)
 
-	switch mode {
-	case "dev":
-		l.Formatter = &logrus.JSONFormatter{
-			CallerPrettyfier: func(f *runtime.Frame) (function string, file string) {
-				filename := path.Base(f.File)
-				return fmt.Sprintf("%s()", f.Function), fmt.Sprintf("%s %d", filename, f.Line)
-			},
-		}
-	case "release":
-		l.Formatter = &logrus.TextFormatter{
-			FullTimestamp: true,
-			ForceColors:   true,
-			CallerPrettyfier: func(f *runtime.Frame) (function, file string) {
-				filename := path.Base(f.File)
-				return fmt.Sprintf("%s()", f.Function), fmt.Sprintf("%s:%d", filename, f.Line)
-			},
-		}
-	default:
-		l.Formatter = &logrus.TextFormatter{
-			CallerPrettyfier: func(f *runtime.Frame) (function string, file string) {
-				filename := path.Base(f.File)
-				return fmt.Sprintf("%s()", f.Function), fmt.Sprintf("%s %d", filename, f.Line)
-			},
-		}
+	l.Formatter = &logrus.TextFormatter{
+		FullTimestamp: true,
+		ForceColors:   true,
+		CallerPrettyfier: func(f *runtime.Frame) (function, file string) {
+			filename := path.Base(f.File)
+			return fmt.Sprintf("%s()", f.Function), fmt.Sprintf("%s:%d", filename, f.Line)
+		},
 	}
 
 	err := os.MkdirAll("logs", 0755)
@@ -85,14 +68,7 @@ func Init(mode string) {
 		LogLevels: logrus.AllLevels,
 	})
 
-	switch mode {
-	case "dev":
-		l.SetLevel(logrus.TraceLevel)
-	case "release":
-		l.SetLevel(logrus.InfoLevel)
-	default:
-		l.SetLevel(logrus.InfoLevel)
-	}
+	l.SetLevel(logrus.DebugLevel)
 
 	e = logrus.NewEntry(l)
 }

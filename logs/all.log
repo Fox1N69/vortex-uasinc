@@ -70,3 +70,19 @@
 [36mINFO[0m[2024-07-11T15:13:20+05:00]main.go:30 main.main() Sql migrations compelet                      
 [36mINFO[0m[2024-07-11T15:14:42+05:00]main.go:28 main.main() Connect to PSQLClient                        
 [36mINFO[0m[2024-07-11T15:14:42+05:00]main.go:30 main.main() Sql migrations compelet                      
+[36mINFO[0m[2024-07-11T15:22:59+05:00]main.go:28 main.main() Connect to PSQLClient                        
+[36mINFO[0m[2024-07-11T15:22:59+05:00]main.go:30 main.main() Sql migrations compelet                      
+[36mINFO[0m[2024-07-11T15:22:59+05:00]client_service.go:76 test-task/internal/services.(*clientService).StartAlgorithmSync() Starting synchronization process...          
+[31mERRO[0m[2024-07-11T15:23:05+05:00]client_service.go:99 test-task/internal/services.(*clientService).syncAlgorithms() Failed to fetch algorithm status for client 2: repository.client.AlgorithmByClientID sql: no rows in result set 
+[31mERRO[0m[2024-07-11T15:23:10+05:00]client_service.go:99 test-task/internal/services.(*clientService).syncAlgorithms() Failed to fetch algorithm status for client 2: repository.client.AlgorithmByClientID sql: no rows in result set 
+[31mERRO[0m[2024-07-11T15:23:15+05:00]client_service.go:99 test-task/internal/services.(*clientService).syncAlgorithms() Failed to fetch algorithm status for client 2: repository.client.AlgorithmByClientID sql: no rows in result set 
+[36mINFO[0m[2024-07-11T15:25:03+05:00]main.go:28 main.main() Connect to PSQLClient                        
+[36mINFO[0m[2024-07-11T15:25:03+05:00]main.go:30 main.main() Sql migrations compelet                      
+[36mINFO[0m[2024-07-11T15:25:03+05:00]client_service.go:76 test-task/internal/services.(*clientService).StartAlgorithmSync() Starting synchronization process...          
+[31mERRO[0m[2024-07-11T15:25:08+05:00]client_service.go:99 test-task/internal/services.(*clientService).syncAlgorithms() Failed to fetch algorithm status for client 2: sql: no rows in result set 
+[31mERRO[0m[2024-07-11T15:25:13+05:00]client_service.go:99 test-task/internal/services.(*clientService).syncAlgorithms() Failed to fetch algorithm status for client 2: sql: no rows in result set 
+[36mINFO[0m[2024-07-11T15:25:48+05:00]main.go:28 main.main() Connect to PSQLClient                        
+[36mINFO[0m[2024-07-11T15:25:48+05:00]main.go:30 main.main() Sql migrations compelet                      
+[36mINFO[0m[2024-07-11T15:25:48+05:00]client_service.go:76 test-task/internal/services.(*clientService).StartAlgorithmSync() Starting synchronization process...          
+[36mINFO[0m[2024-07-11T15:35:13+05:00]main.go:28 main.main() Connect to PSQLClient                        
+[36mINFO[0m[2024-07-11T15:35:13+05:00]main.go:30 main.main() Sql migrations compelet                      

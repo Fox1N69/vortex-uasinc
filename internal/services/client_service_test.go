@@ -233,7 +233,7 @@ func TestStartAlgorithmSync(t *testing.T) {
 
 	go service.StartAlgorithmSync()
 
-  time.Sleep(5 * time.Second)	
+	time.Sleep(15 * time.Second)
 
 	mockRepo.AssertExpectations(t)
 }

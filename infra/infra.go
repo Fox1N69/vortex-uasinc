@@ -54,7 +54,6 @@ func (i *infra) Config() *viper.Viper {
 
 // GetLogger - get setup logger
 func (i *infra) GetLogger() logger.Logger {
-	logger.Init("release")
 	log := logger.GetLogger()
 	return log
 }
