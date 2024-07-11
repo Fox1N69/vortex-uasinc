@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"test-task/internal/models"
+	"test-task/pkg/util/logger"
 	"time"
 )
 
@@ -23,11 +23,13 @@ type ClientRepository interface {
 }
 
 type clientRepository struct {
-	db *sql.DB
+	db  *sql.DB
+	log logger.Logger
 }
 
 func NewClientRepository(db *sql.DB) ClientRepository {
-	return &clientRepository{db: db}
+	log := logger.GetLogger()
+	return &clientRepository{db: db, log: log}
 }
 
 // Create creates a new client record along with its associated algorithm status.
@@ -35,14 +37,17 @@ func NewClientRepository(db *sql.DB) ClientRepository {
 func (cr *clientRepository) Create(client *models.Client, algorithm *models.AlgorithmStatus) (int64, error) {
 	const op = "repository.client.Create"
 
+	cr.log.Debugf("%s: creating new client: %+v", op, client)
+
 	tx, err := cr.db.Begin()
 	if err != nil {
-		return 0, fmt.Errorf("%s: %w", op, err)
+		cr.log.Errorf("%s: failed to begin transaction: %v", op, err)
+		return 0, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
 		if err != nil {
 			tx.Rollback()
-			log.Printf("%s: transaction rolled back due to error: %v", op, err)
+			cr.log.Errorf("%s: transaction rolled back due to error: %v", op, err)
 		}
 	}()
 
@@ -53,7 +58,8 @@ func (cr *clientRepository) Create(client *models.Client, algorithm *models.Algo
 	`
 	stmtClient, err := tx.Prepare(queryClient)
 	if err != nil {
-		return 0, fmt.Errorf("%s: %w", op, err)
+		cr.log.Errorf("%s: failed to prepare client insertion query: %v", op, err)
+		return 0, fmt.Errorf("failed to prepare client insertion query: %w", err)
 	}
 	defer stmtClient.Close()
 
@@ -71,8 +77,11 @@ func (cr *clientRepository) Create(client *models.Client, algorithm *models.Algo
 		client.UpdatedAt,
 	).Scan(&clientID)
 	if err != nil {
-		return 0, fmt.Errorf("%s: %w", op, err)
+		cr.log.Errorf("%s: failed to insert client: %v", op, err)
+		return 0, fmt.Errorf("failed to insert client: %w", err)
 	}
+
+	cr.log.Debugf("%s: client created successfully with ID %d", op, clientID)
 
 	queryAlgorithm := `
 		INSERT INTO algorithm_status (client_id, vwap, twap, hft)
@@ -81,7 +90,8 @@ func (cr *clientRepository) Create(client *models.Client, algorithm *models.Algo
 	`
 	stmtAlgorithm, err := tx.Prepare(queryAlgorithm)
 	if err != nil {
-		return 0, fmt.Errorf("%s: %w", op, err)
+		cr.log.Errorf("%s: failed to prepare algorithm status insertion query: %v", op, err)
+		return 0, fmt.Errorf("failed to prepare algorithm status insertion query: %w", err)
 	}
 	defer stmtAlgorithm.Close()
 
@@ -93,12 +103,16 @@ func (cr *clientRepository) Create(client *models.Client, algorithm *models.Algo
 		algorithm.HFT,
 	).Scan(&algorithm.ID)
 	if err != nil {
-		return 0, fmt.Errorf("%s: %w", op, err)
+		cr.log.Errorf("%s: failed to insert algorithm status: %v", op, err)
+		return 0, fmt.Errorf("failed to insert algorithm status: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return 0, fmt.Errorf("%s: %w", op, err)
+		cr.log.Errorf("%s: failed to commit transaction: %v", op, err)
+		return 0, fmt.Errorf("failed to commit transaction: %w", err)
 	}
+
+	cr.log.Infof("%s: transaction committed successfully", op)
 
 	return clientID, nil
 }
@@ -106,7 +120,7 @@ func (cr *clientRepository) Create(client *models.Client, algorithm *models.Algo
 // ClientByID retrieves a client by its ID from the database.
 // It returns a pointer to the client object if found, or nil if not found.
 func (cr *clientRepository) ClientByID(id int64) (*models.Client, error) {
-	const op = "repository.client.ClientID"
+	const op = "repository.client.ClientByID"
 
 	query := `
 		SELECT id, client_name, version, image, cpu, memory, priority, need_restart, spawned_at, created_at, updated_at
@@ -129,11 +143,15 @@ func (cr *clientRepository) ClientByID(id int64) (*models.Client, error) {
 		&client.UpdatedAt,
 	)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
+			cr.log.Debugf("%s: client with ID %d not found", op, id)
 			return nil, nil
 		}
-		return nil, fmt.Errorf("%s %w Could not get client", op, err)
+		cr.log.Errorf("%s: failed to get client: %v", op, err)
+		return nil, fmt.Errorf("failed to get client: %w", err)
 	}
+
+	cr.log.Infof("%s: retrieved client with ID %d", op, id)
 
 	return &client, nil
 }
@@ -145,7 +163,8 @@ func (cr *clientRepository) Update(id int64, updateParams map[string]interface{}
 	const op = "repository.client.Update"
 
 	if len(updateParams) == 0 {
-		return fmt.Errorf("%s No updates provided", op)
+		cr.log.Errorf("%s: no updates provided", op)
+		return fmt.Errorf("no updates provided")
 	}
 
 	setClauses := make([]string, 0, len(updateParams))
@@ -164,8 +183,11 @@ func (cr *clientRepository) Update(id int64, updateParams map[string]interface{}
 
 	_, err := cr.db.Exec(query, args...)
 	if err != nil {
-		return fmt.Errorf("%s %w Could not update client", op, err)
+		cr.log.Errorf("%s: failed to update client: %v", op, err)
+		return fmt.Errorf("failed to update client: %w", err)
 	}
+
+	cr.log.Infof("%s: client with ID %d updated successfully", op, id)
 
 	return nil
 }
@@ -175,14 +197,17 @@ func (cr *clientRepository) Delete(id int64) error {
 	const op = "repository.client.Delete"
 
 	query := `
-	DELETE FROM clients 
-	WHERE id = $1
+		DELETE FROM clients 
+		WHERE id = $1
 	`
 
 	_, err := cr.db.Exec(query, id)
 	if err != nil {
-		return fmt.Errorf("%s %w Could not delete client", op, err)
+		cr.log.Errorf("%s: failed to delete client: %v", op, err)
+		return fmt.Errorf("failed to delete client: %w", err)
 	}
+
+	cr.log.Infof("%s: client with ID %d deleted successfully", op, id)
 
 	return nil
 }
@@ -199,7 +224,8 @@ func (cr *clientRepository) Clients(ctx context.Context) ([]models.Client, error
 
 	rows, err := cr.db.QueryContext(ctx, query)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		cr.log.Errorf("%s: failed to retrieve clients: %v", op, err)
+		return nil, fmt.Errorf("failed to retrieve clients: %w", err)
 	}
 	defer rows.Close()
 
@@ -220,14 +246,18 @@ func (cr *clientRepository) Clients(ctx context.Context) ([]models.Client, error
 			&client.UpdatedAt,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %w", op, err)
+			cr.log.Errorf("%s: failed to scan client row: %v", op, err)
+			return nil, fmt.Errorf("failed to scan client row: %w", err)
 		}
 		clients = append(clients, client)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		cr.log.Errorf("%s: error during iteration over clients: %v", op, err)
+		return nil, fmt.Errorf("error during iteration over clients: %w", err)
 	}
+
+	cr.log.Debugf("%s: retrieved %d clients", op, len(clients))
 
 	return clients, nil
 }
@@ -244,7 +274,8 @@ func (cr *clientRepository) AlgorithmStatuses() ([]models.AlgorithmStatus, error
 
 	rows, err := cr.db.Query(query)
 	if err != nil {
-		return nil, fmt.Errorf("%s %w Could not list algorithm statuses", op, err)
+		cr.log.Errorf("%s: failed to list algorithm statuses: %v", op, err)
+		return nil, fmt.Errorf("failed to list algorithm statuses: %w", err)
 	}
 	defer rows.Close()
 
@@ -259,21 +290,31 @@ func (cr *clientRepository) AlgorithmStatuses() ([]models.AlgorithmStatus, error
 			&status.HFT,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("%s %w Could not scan algorithm status", op, err)
+			cr.log.Errorf("%s: failed to scan algorithm status row: %v", op, err)
+			return nil, fmt.Errorf("failed to scan algorithm status row: %w", err)
 		}
 		statuses = append(statuses, status)
 	}
 
+	if err := rows.Err(); err != nil {
+		cr.log.Errorf("%s: error during iteration over algorithm statuses: %v", op, err)
+		return nil, fmt.Errorf("error during iteration over algorithm statuses: %w", err)
+	}
+
+	cr.log.Debugf("%s: retrieved %d algorithm statuses", op, len(statuses))
+
 	return statuses, nil
 }
 
-// AlgorithmByClientID retrieves the algorithm status associated with a client ID.
-// It returns a pointer to the algorithm status object if found, or nil if not found.
+// UpdateAlgorithmStatus updates the algorithm status identified by the given ID.
+// It accepts a map of status updates where keys represent column names in the
+// algorithm_status table and values represent new values for those columns.
 func (cr *clientRepository) UpdateAlgorithmStatus(id int64, status map[string]interface{}) error {
 	const op = "repository.client.UpdateAlgorithmStatus"
 
 	if len(status) == 0 {
-		return fmt.Errorf("%s No updates provided", op)
+		cr.log.Errorf("%s: no updates provided", op)
+		return fmt.Errorf("no updates provided")
 	}
 
 	setClauses := make([]string, 0, len(status))
@@ -286,7 +327,8 @@ func (cr *clientRepository) UpdateAlgorithmStatus(id int64, status map[string]in
 			setClauses = append(setClauses, fmt.Sprintf("%s = $%d", column, i))
 			args = append(args, v)
 		default:
-			return fmt.Errorf("%s Unsupported type for column %s: %T", op, column, v)
+			cr.log.Errorf("%s: unsupported type for column %s: %T", op, column, v)
+			return fmt.Errorf("unsupported type for column %s", column)
 		}
 		i++
 	}
@@ -297,15 +339,17 @@ func (cr *clientRepository) UpdateAlgorithmStatus(id int64, status map[string]in
 
 	_, err := cr.db.Exec(query, args...)
 	if err != nil {
-		return fmt.Errorf("%s %w Could not update algorithm status", op, err)
+		cr.log.Errorf("%s: failed to update algorithm status: %v", op, err)
+		return fmt.Errorf("failed to update algorithm status: %w", err)
 	}
+
+	cr.log.Infof("%s: algorithm status with ID %d updated successfully", op, id)
 
 	return nil
 }
 
-// UpdateAlgorithmStatus updates the algorithm status identified by the given ID.
-// It accepts a map of status updates where keys represent column names in the
-// algorithm_status table and values represent new values for those columns.
+// AlgorithmByClientID retrieves the algorithm status associated with a client ID.
+// It returns a pointer to the algorithm status object if found, or nil if not found.
 func (cr *clientRepository) AlgorithmByClientID(ctx context.Context, clientID int64) (*models.AlgorithmStatus, error) {
 	const op = "repository.client.AlgorithmByClientID"
 
@@ -325,10 +369,14 @@ func (cr *clientRepository) AlgorithmByClientID(ctx context.Context, clientID in
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, err
+			cr.log.Debugf("%s: algorithm status not found for client ID %d", op, clientID)
+			return nil, nil
 		}
-		return nil, fmt.Errorf("%s %w", op, err)
+		cr.log.Errorf("%s: failed to retrieve algorithm status: %v", op, err)
+		return nil, fmt.Errorf("failed to retrieve algorithm status: %w", err)
 	}
+
+	cr.log.Infof("%s: retrieved algorithm status for client ID %d", op, clientID)
 
 	return &algorithm, nil
 }

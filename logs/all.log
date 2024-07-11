@@ -142,3 +142,6 @@
 [36mINFO[0m[2024-07-11T18:23:54+05:00]main.go:30 main.main() Sql migrations compelet                      
 [36mINFO[0m[2024-07-11T19:44:52+05:00]main.go:28 main.main() Connect to PSQLClient                        
 [36mINFO[0m[2024-07-11T19:44:52+05:00]main.go:30 main.main() Sql migrations compelet                      
+[36mINFO[0m[2024-07-11T20:29:18+05:00]main.go:27 main.main() Connect to PSQLClient                        
+[36mINFO[0m[2024-07-11T20:29:18+05:00]main.go:29 main.main() Sql migrations compelet                      
+[36mINFO[0m[2024-07-11T20:29:18+05:00]api.go:48 test-task/internal/api.(*server).Run() Start algorithm sync                         

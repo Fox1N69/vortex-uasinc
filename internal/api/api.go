@@ -6,9 +6,9 @@ import (
 	"test-task/internal/manager"
 	"test-task/pkg/http/middleware"
 	"test-task/pkg/http/request"
+	"test-task/pkg/util/logger"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
 
 type Server interface {
@@ -44,7 +44,8 @@ func (c *server) Run() {
 	c.v1()
 
 	c.service.ClientService().StartAlgorithmSync()
-	logrus.Info("Start algorithm sync")
+	log := logger.GetLogger()
+	log.Info("Start algorithm sync")
 
 	c.gin.Run(c.infra.Port())
 }

@@ -17,7 +17,7 @@ func main() {
 	// Get custom logrus logger
 	log := i.GetLogger()
 
-	// Start pprof server on port::6060
+	// Start pprof server
 	go func() {
 		log.Println(http.ListenAndServe("localhost:6060", nil))
 	}()
