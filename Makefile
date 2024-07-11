@@ -1,14 +1,14 @@
 dep:
 	go mod tidy
 
-run-tracker:
-	go run cmd/time-tracker/main.go
+run-algosync:
+	go run cmd/algosync-service/main.go
 
 test:
 	go test -short -cover ./...
 
-build-tracker:
-	go build -o bin/server cmd/time-tracker/main.go
+build-algosync:
+	go build -o bin/server cmd/algosync-service/main.go
 
 docker-image:
 	docker build -t server:v1 .

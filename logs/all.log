@@ -128,3 +128,8 @@
 [36mINFO[0m[2024-07-11T17:06:53+05:00]main.go:30 main.main() Sql migrations compelet                      
 [36mINFO[0m[2024-07-11T17:09:20+05:00]main.go:28 main.main() Connect to PSQLClient                        
 [36mINFO[0m[2024-07-11T17:09:20+05:00]main.go:30 main.main() Sql migrations compelet                      
+[36mINFO[0m[2024-07-11T17:27:54+05:00]main.go:28 main.main() Connect to PSQLClient                        
+[36mINFO[0m[2024-07-11T17:27:54+05:00]main.go:30 main.main() Sql migrations compelet                      
+[36mINFO[0m[2024-07-11T17:28:17+05:00]main.go:23 main.main.func1() listen tcp 127.0.0.1:6060: bind: address already in use 
+[36mINFO[0m[2024-07-11T17:28:17+05:00]main.go:28 main.main() Connect to PSQLClient                        
+[36mINFO[0m[2024-07-11T17:28:17+05:00]main.go:30 main.main() Sql migrations compelet                      
