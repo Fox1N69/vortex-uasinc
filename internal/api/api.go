@@ -9,6 +9,8 @@ import (
 	"test-task/pkg/util/logger"
 
 	"github.com/gin-gonic/gin"
+	swaggerFile "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type Server interface {
@@ -80,4 +82,6 @@ func (c *server) v1() {
 			client.PATCH("/algorithm/:id", clientHandler.UpdateAlgorithmStatus)
 		}
 	}
+
+	c.gin.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFile.Handler))
 }

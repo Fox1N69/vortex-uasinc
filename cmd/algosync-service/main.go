@@ -3,10 +3,17 @@ package main
 import (
 	"net/http"
 	_ "net/http/pprof"
+	_ "test-task/cmd/algosync-service/docs"
 	"test-task/infra"
 	"test-task/internal/api"
 )
 
+// @title AlgorithmSync service
+// @description сервис для синхронизации пользовательских алгоритмов
+// @version 1.0
+
+// @host localhost:4000
+// @basePath /api
 func main() {
 
 	// Init config

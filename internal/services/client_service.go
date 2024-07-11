@@ -73,7 +73,7 @@ func (cs *clientService) StartAlgorithmSync() {
 	const op = "service.client.StartAlgorithmSync"
 
 	cs.log.Infof("%s: Starting synchronization process...", op)
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(5 * time.Minute)
 
 	go func() {
 		defer ticker.Stop()
@@ -120,13 +120,13 @@ func (cs *clientService) syncPodsForClient(client models.Client, algoStatus mode
 		if err := cs.k8sDeployer.CreatePod(vwapPodName, client.Image); err != nil {
 			cs.log.Fatalf("%s: Failed to deploy VWAP pod for client %d: %v", op, client.ID, err)
 		} else {
-			cs.log.Infof("%s: VWAP pod deployed successfully for client %d", op, client.ID)
+			cs.log.Debugf("%s: VWAP pod deployed successfully for client %d", op, client.ID)
 		}
 	} else {
 		if err := cs.k8sDeployer.DeletePod(vwapPodName); err != nil {
 			cs.log.Fatalf("%s: Failed to delete VWAP pod for client %d: %v", op, client.ID, err)
 		} else {
-			cs.log.Infof("%s: VWAP pod deleted successfully for client %d", op, client.ID)
+			cs.log.Debugf("%s: VWAP pod deleted successfully for client %d", op, client.ID)
 		}
 	}
 
@@ -136,13 +136,13 @@ func (cs *clientService) syncPodsForClient(client models.Client, algoStatus mode
 		if err := cs.k8sDeployer.CreatePod(twapPodName, client.Image); err != nil {
 			cs.log.Fatalf("%s: Failed to deploy TWAP pod for client %d: %v", op, client.ID, err)
 		} else {
-			cs.log.Infof("%s: TWAP pod deployed successfully for client %d", op, client.ID)
+			cs.log.Debugf("%s: TWAP pod deployed successfully for client %d", op, client.ID)
 		}
 	} else {
 		if err := cs.k8sDeployer.DeletePod(twapPodName); err != nil {
 			cs.log.Fatalf("%s: Failed to delete TWAP pod for client %d: %v", op, client.ID, err)
 		} else {
-			cs.log.Infof("%s: TWAP pod deleted successfully for client %d", op, client.ID)
+			cs.log.Debugf("%s: TWAP pod deleted successfully for client %d", op, client.ID)
 		}
 	}
 
@@ -152,13 +152,13 @@ func (cs *clientService) syncPodsForClient(client models.Client, algoStatus mode
 		if err := cs.k8sDeployer.CreatePod(hftPodName, client.Image); err != nil {
 			cs.log.Fatalf("%s: Failed to deploy HFT pod for client %d: %v", op, client.ID, err)
 		} else {
-			cs.log.Infof("%s: HFT pod deployed successfully for client %d", op, client.ID)
+			cs.log.Debugf("%s: HFT pod deployed successfully for client %d", op, client.ID)
 		}
 	} else {
 		if err := cs.k8sDeployer.DeletePod(hftPodName); err != nil {
 			cs.log.Fatalf("%s: Failed to delete HFT pod for client %d: %v", op, client.ID, err)
 		} else {
-			cs.log.Infof("%s: HFT pod deleted successfully for client %d", op, client.ID)
+			cs.log.Debugf("%s: HFT pod deleted successfully for client %d", op, client.ID)
 		}
 	}
 }
