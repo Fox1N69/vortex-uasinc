@@ -22,7 +22,7 @@ type Infra interface {
 	RedisClient() *redis.Client
 	PSQLClient() *postgres.PSQLClient
 	RunSQLMigrations()
-	KubernetesDeployer() *k8s.KubernetesDeployer
+	KubernetesDeployer() k8s.KubernetesDeployer
 }
 
 type infra struct {
@@ -52,17 +52,10 @@ func (i *infra) Config() *viper.Viper {
 	return vpr
 }
 
-var (
-	logOnce sync.Once
-	log     logger.Logger
-)
-
 // GetLogger - get setup logger
 func (i *infra) GetLogger() logger.Logger {
-	logOnce.Do(func() {
-		logger.Init("release")
-		log = logger.GetLogger()
-	})
+	logger.Init("release")
+	log := logger.GetLogger()
 	return log
 }
 
@@ -157,6 +150,6 @@ func (i *infra) RunSQLMigrations() {
 }
 
 // KubernetedDeployer - init and returns deployer
-func (i *infra) KubernetesDeployer() *k8s.KubernetesDeployer {
+func (i *infra) KubernetesDeployer() k8s.KubernetesDeployer {
 	return k8s.NewKubernetesDeployer()
 }

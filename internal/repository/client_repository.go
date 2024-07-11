@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -145,6 +144,37 @@ func (cr *clientRepository) Delete(id int64) error {
 func (cr *clientRepository) Clients(ctx context.Context) ([]models.Client, error) {
 	const op = "repository.client.Clients"
 
+	query := `
+		SELECT id, client_name, version, image, cpu, memory, priority, need_restart, spawned_at, created_at, updated_at
+		FROM clients
+	`
+
+	rows, err := cr.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	var clients []models.Client
+	for rows.Next() {
+		var client models.Client
+		err := rows.Scan(&client.ID, &client.ClientName, &client.Version, &client.Image, &client.CPU, &client.Memory, &client.Priority, &client.NeedRestart, &client.SpawnedAt, &client.CreatedAt, &client.UpdatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		clients = append(clients, client)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return clients, nil
+}
+
+/*func (cr *clientRepository) Clients(ctx context.Context) ([]models.Client, error) {
+	const op = "repository.client.Clients"
+
 	cacheKey := "clients_list"
 	cachedData, err := cr.rdb.Get(ctx, cacheKey).Bytes()
 	if err == nil {
@@ -193,7 +223,7 @@ func (cr *clientRepository) Clients(ctx context.Context) ([]models.Client, error
 	}
 
 	return clients, nil
-}
+} */
 
 func (cr *clientRepository) CreateAlgorithm(algorithm *models.AlgorithmStatus) (int64, error) {
 	const op = "repository.client.CreateAlgorithm"

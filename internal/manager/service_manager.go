@@ -31,7 +31,7 @@ var (
 func (sm *serviceManager) ClientService() service.ClientService {
 	clientServiceOnce.Do(func() {
 		clientRepo := sm.repo.ClientRepository()
-		clientService = service.NewClientService(clientRepo, sm.infra.GetLogger(), sm.infra.KubernetesDeployer())
+		clientService = service.NewClientService(clientRepo, sm.infra.KubernetesDeployer())
 	})
 
 	return clientService

@@ -2,11 +2,10 @@ package service_test
 
 import (
 	"context"
-	"test-task/infra/k8s"
 	"test-task/internal/models"
 	service "test-task/internal/services"
-	"test-task/pkg/util/logger"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -73,10 +72,29 @@ func (m *MockLogger) Errorf(format string, args ...interface{}) {
 	m.Called(format, args)
 }
 
+type MockKubernetesDeployer struct {
+	mock.Mock
+}
+
+func (m *MockKubernetesDeployer) CreatePod(name, image string) error {
+	args := m.Called(name, image)
+	return args.Error(0)
+}
+
+func (m *MockKubernetesDeployer) DeletePod(name string) error {
+	args := m.Called(name)
+	return args.Error(0)
+}
+
+func (m *MockKubernetesDeployer) GetPodList() ([]string, error) {
+	args := m.Called()
+	return args.Get(0).([]string), args.Error(1)
+}
+
 func TestClientService_Create(t *testing.T) {
 	mockRepo := new(MockClientRepository)
-	mockK8sDeployer := k8s.NewKubernetesDeployer()
-	service := service.NewClientService(mockRepo, logger.GetLogger(), mockK8sDeployer)
+	mockK8sDeployer := new(MockKubernetesDeployer)
+	service := service.NewClientService(mockRepo, mockK8sDeployer)
 
 	client := &models.Client{ID: 1, ClientName: "Test Client"}
 	mockRepo.On("Create", client).Return(int64(1), nil)
@@ -90,8 +108,8 @@ func TestClientService_Create(t *testing.T) {
 
 func TestClientService_ClientByID(t *testing.T) {
 	mockRepo := new(MockClientRepository)
-	mockK8sDeployer := k8s.NewKubernetesDeployer()
-	service := service.NewClientService(mockRepo, logger.Logger{}, mockK8sDeployer)
+	mockK8sDeployer := new(MockKubernetesDeployer)
+	service := service.NewClientService(mockRepo, mockK8sDeployer)
 
 	client := &models.Client{ID: 1, ClientName: "Test Client"}
 	mockRepo.On("ClientByID", int64(1)).Return(client, nil)
@@ -105,8 +123,8 @@ func TestClientService_ClientByID(t *testing.T) {
 
 func TestClientService_Update(t *testing.T) {
 	mockRepo := new(MockClientRepository)
-	mockK8sDeployer := k8s.NewKubernetesDeployer()
-	service := service.NewClientService(mockRepo, logger.GetLogger(), mockK8sDeployer)
+	mockK8sDeployer := new(MockKubernetesDeployer)
+	service := service.NewClientService(mockRepo, mockK8sDeployer)
 
 	updateParams := map[string]interface{}{"ClientName": "Updated Client"}
 	mockRepo.On("Update", int64(1), updateParams).Return(nil)
@@ -119,8 +137,8 @@ func TestClientService_Update(t *testing.T) {
 
 func TestClientService_Delete(t *testing.T) {
 	mockRepo := new(MockClientRepository)
-	mockK8sDeployer := k8s.NewKubernetesDeployer()
-	service := service.NewClientService(mockRepo, logger.GetLogger(), mockK8sDeployer)
+	mockK8sDeployer := new(MockKubernetesDeployer)
+	service := service.NewClientService(mockRepo, mockK8sDeployer)
 
 	mockRepo.On("Delete", int64(1)).Return(nil)
 
@@ -132,8 +150,8 @@ func TestClientService_Delete(t *testing.T) {
 
 func TestClientService_Clients(t *testing.T) {
 	mockRepo := new(MockClientRepository)
-	mockK8sDeployer := k8s.NewKubernetesDeployer()
-	service := service.NewClientService(mockRepo, logger.GetLogger(), mockK8sDeployer)
+	mockK8sDeployer := new(MockKubernetesDeployer)
+	service := service.NewClientService(mockRepo, mockK8sDeployer)
 
 	clients := []models.Client{
 		{ID: 1, ClientName: "Test Client 1"},
@@ -150,8 +168,8 @@ func TestClientService_Clients(t *testing.T) {
 
 func TestClientService_CreateAlgorithm(t *testing.T) {
 	mockRepo := new(MockClientRepository)
-	mockK8sDeployer := k8s.NewKubernetesDeployer()
-	service := service.NewClientService(mockRepo, logger.GetLogger(), mockK8sDeployer)
+	mockK8sDeployer := new(MockKubernetesDeployer)
+	service := service.NewClientService(mockRepo, mockK8sDeployer)
 
 	algorithm := &models.AlgorithmStatus{ID: 1, ClientID: 1, VWAP: true}
 	mockRepo.On("CreateAlgorithm", algorithm).Return(int64(1), nil)
@@ -165,8 +183,8 @@ func TestClientService_CreateAlgorithm(t *testing.T) {
 
 func TestClientService_AlgorithmStatuses(t *testing.T) {
 	mockRepo := new(MockClientRepository)
-	mockK8sDeployer := k8s.NewKubernetesDeployer()
-	service := service.NewClientService(mockRepo, logger.GetLogger(), mockK8sDeployer)
+	mockK8sDeployer := new(MockKubernetesDeployer)
+	service := service.NewClientService(mockRepo, mockK8sDeployer)
 
 	algorithms := []models.AlgorithmStatus{
 		{ID: 1, ClientID: 1, VWAP: true},
@@ -183,8 +201,8 @@ func TestClientService_AlgorithmStatuses(t *testing.T) {
 
 func TestClientService_UpdateAlgorithmStatus(t *testing.T) {
 	mockRepo := new(MockClientRepository)
-	mockK8sDeployer := k8s.NewKubernetesDeployer()
-	service := service.NewClientService(mockRepo, logger.GetLogger(), mockK8sDeployer)
+	mockK8sDeployer := new(MockKubernetesDeployer)
+	service := service.NewClientService(mockRepo, mockK8sDeployer)
 
 	updateParams := map[string]interface{}{"VWAP": true}
 	mockRepo.On("UpdateAlgorithmStatus", int64(1), updateParams).Return(nil)
@@ -192,5 +210,30 @@ func TestClientService_UpdateAlgorithmStatus(t *testing.T) {
 	err := service.UpdateAlgorithmStatus(int64(1), updateParams)
 
 	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestStartAlgorithmSync(t *testing.T) {
+	mockRepo := new(MockClientRepository)
+	mockK8sDeployer := new(MockKubernetesDeployer)
+
+	service := service.NewClientService(mockRepo, mockK8sDeployer)
+
+	clients := []models.Client{
+		{ID: 1, ClientName: "Client1"},
+		{ID: 2, ClientName: "Client2"},
+	}
+	mockRepo.On("Clients", mock.Anything).Return(clients, nil)
+
+	mockRepo.On("AlgorithmByClientID", mock.Anything, int64(1)).Return(&models.AlgorithmStatus{VWAP: true}, nil)
+	mockRepo.On("AlgorithmByClientID", mock.Anything, int64(2)).Return(&models.AlgorithmStatus{VWAP: false}, nil)
+
+	mockK8sDeployer.On("CreatePod", mock.Anything, mock.Anything).Return(nil)
+	mockK8sDeployer.On("DeletePod", mock.Anything).Return(nil)
+
+	go service.StartAlgorithmSync()
+
+  time.Sleep(5 * time.Second)	
+
 	mockRepo.AssertExpectations(t)
 }

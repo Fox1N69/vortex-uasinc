@@ -8,20 +8,20 @@ import (
 	"strings"
 )
 
-type Deployer interface {
-	CreatePod(name string) error
+type KubernetesDeployer interface {
+	CreatePod(name string, image string) error
 	DeletePod(name string) error
 	GetPodList() ([]string, error)
 }
 
-type KubernetesDeployer struct{}
+type kubernetesDeployer struct{}
 
-func NewKubernetesDeployer() *KubernetesDeployer {
-	return &KubernetesDeployer{}
+func NewKubernetesDeployer() KubernetesDeployer {
+	return &kubernetesDeployer{}
 }
 
 // CreatePod created pod by name and with the image of the client
-func (k *KubernetesDeployer) CreatePod(name string, image string) error {
+func (k *kubernetesDeployer) CreatePod(name string, image string) error {
 	cmd := exec.Command("kubectl", "run", name, "--image="+image)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -36,7 +36,7 @@ func (k *KubernetesDeployer) CreatePod(name string, image string) error {
 }
 
 // DeletePod deleted pod by name
-func (k *KubernetesDeployer) DeletePod(name string) error {
+func (k *kubernetesDeployer) DeletePod(name string) error {
 	cmd := exec.Command("kubectl", "delete", "pod", name)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -51,7 +51,7 @@ func (k *KubernetesDeployer) DeletePod(name string) error {
 }
 
 // GetAllPodList returns all list pods in the kubernetes
-func (k *KubernetesDeployer) GetAllPodList() ([]string, error) {
+func (k *kubernetesDeployer) GetPodList() ([]string, error) {
 	cmd := exec.Command("kubectl", "get", "pods", "-o", "json")
 	output, err := cmd.Output()
 	if err != nil {

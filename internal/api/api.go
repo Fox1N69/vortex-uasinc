@@ -38,6 +38,7 @@ func (c *server) Run() {
 	c.gin.Use(c.middleware.CORS())
 	c.handlers()
 	c.v1()
+
 	c.service.ClientService().StartAlgorithmSync()
 	logrus.Info("Start algorithm sync")
 
