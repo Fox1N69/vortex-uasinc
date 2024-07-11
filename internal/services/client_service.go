@@ -6,9 +6,8 @@ import (
 	"test-task/infra/k8s"
 	"test-task/internal/models"
 	"test-task/internal/repository"
+	"test-task/pkg/util/logger"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 type ClientService interface {
@@ -25,12 +24,15 @@ type ClientService interface {
 type clientService struct {
 	repository  repository.ClientRepository
 	k8sDeployer k8s.KubernetesDeployer
+	log         logger.Logger
 }
 
 func NewClientService(clientRepo repository.ClientRepository, k8sDeployer k8s.KubernetesDeployer) ClientService {
+	logger := logger.GetLogger()
 	return &clientService{
 		repository:  clientRepo,
 		k8sDeployer: k8sDeployer,
+		log:         logger,
 	}
 }
 
@@ -68,7 +70,9 @@ func (cs *clientService) UpdateAlgorithmStatus(id int64, status map[string]inter
 // A Ticker is used to trigger the synchronization at the specified intervals.
 // When the function completes, the Ticker is stopped to release resources.
 func (cs *clientService) StartAlgorithmSync() {
-	log.Infof("Starting synchronization process...")
+	const op = "service.client.StartAlgorithmSync"
+
+	cs.log.Infof("%s: Starting synchronization process...", op)
 	ticker := time.NewTicker(5 * time.Minute)
 
 	go func() {
@@ -77,19 +81,24 @@ func (cs *clientService) StartAlgorithmSync() {
 			cs.syncAlgorithms()
 		}
 	}()
+
+	cs.log.Infof("%s: Synchronization process started", op)
 }
 
+// syncAlgorithms fetches clients from the database and synchronizes pods for each client based on their algorithm status.
 func (cs *clientService) syncAlgorithms() {
+	const op = "service.client.syncAlgorithms"
+
 	clients, err := cs.repository.Clients(context.Background())
 	if err != nil {
-		log.Errorf("Failed to fetch clients from database: %v", err)
+		cs.log.Errorf("%s: Failed to fetch clients from database: %v", op, err)
 		return
 	}
 
 	for _, client := range clients {
 		algoStatus, err := cs.repository.AlgorithmByClientID(context.Background(), client.ID)
 		if err != nil {
-			log.Errorf("Failed to fetch algorithm status for client %d: %v", client.ID, err)
+			cs.log.Errorf("%s: Failed to fetch algorithm status for client %d: %v", op, client.ID, err)
 			continue
 		}
 		cs.syncPodsForClient(client, *algoStatus)
@@ -103,15 +112,21 @@ func (cs *clientService) syncAlgorithms() {
 // Pod names are generated based on the client's ID and algorithm type (e.g., "vwap-123").
 // If pod creation or deletion fails, an error is logged.
 func (cs *clientService) syncPodsForClient(client models.Client, algoStatus models.AlgorithmStatus) {
+	const op = "service.client.syncPodsForClient"
+
 	// VWAP
 	vwapPodName := fmt.Sprintf("vwap-%d", client.ID)
 	if algoStatus.VWAP {
 		if err := cs.k8sDeployer.CreatePod(vwapPodName, client.Image); err != nil {
-			log.Errorf("Failed to deploy VWAP pod for client %d: %v", client.ID, err)
+			cs.log.Errorf("%s: Failed to deploy VWAP pod for client %d: %v", op, client.ID, err)
+		} else {
+			cs.log.Infof("%s: VWAP pod deployed successfully for client %d", op, client.ID)
 		}
 	} else {
 		if err := cs.k8sDeployer.DeletePod(vwapPodName); err != nil {
-			log.Errorf("Failed to delete VWAP pod for client %d: %v", client.ID, err)
+			cs.log.Errorf("%s: Failed to delete VWAP pod for client %d: %v", op, client.ID, err)
+		} else {
+			cs.log.Infof("%s: VWAP pod deleted successfully for client %d", op, client.ID)
 		}
 	}
 
@@ -119,11 +134,15 @@ func (cs *clientService) syncPodsForClient(client models.Client, algoStatus mode
 	twapPodName := fmt.Sprintf("twap-%d", client.ID)
 	if algoStatus.TWAP {
 		if err := cs.k8sDeployer.CreatePod(twapPodName, client.Image); err != nil {
-			log.Errorf("Failed to deploy TWAP pod for client %d: %v", client.ID, err)
+			cs.log.Errorf("%s: Failed to deploy TWAP pod for client %d: %v", op, client.ID, err)
+		} else {
+			cs.log.Infof("%s: TWAP pod deployed successfully for client %d", op, client.ID)
 		}
 	} else {
 		if err := cs.k8sDeployer.DeletePod(twapPodName); err != nil {
-			log.Errorf("Failed to delete TWAP pod for client %d: %v", client.ID, err)
+			cs.log.Errorf("%s: Failed to delete TWAP pod for client %d: %v", op, client.ID, err)
+		} else {
+			cs.log.Infof("%s: TWAP pod deleted successfully for client %d", op, client.ID)
 		}
 	}
 
@@ -131,11 +150,15 @@ func (cs *clientService) syncPodsForClient(client models.Client, algoStatus mode
 	hftPodName := fmt.Sprintf("hft-%d", client.ID)
 	if algoStatus.HFT {
 		if err := cs.k8sDeployer.CreatePod(hftPodName, client.Image); err != nil {
-			log.Errorf("Failed to deploy HFT pod for client %d: %v", client.ID, err)
+			cs.log.Errorf("%s: Failed to deploy HFT pod for client %d: %v", op, client.ID, err)
+		} else {
+			cs.log.Infof("%s: HFT pod deployed successfully for client %d", op, client.ID)
 		}
 	} else {
 		if err := cs.k8sDeployer.DeletePod(hftPodName); err != nil {
-			log.Errorf("Failed to delete HFT pod for client %d: %v", client.ID, err)
+			cs.log.Errorf("%s: Failed to delete HFT pod for client %d: %v", op, client.ID, err)
+		} else {
+			cs.log.Infof("%s: HFT pod deleted successfully for client %d", op, client.ID)
 		}
 	}
 }
