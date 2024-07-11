@@ -196,7 +196,19 @@ func (cr *clientRepository) Clients(ctx context.Context) ([]models.Client, error
 	var clients []models.Client
 	for rows.Next() {
 		var client models.Client
-		err := rows.Scan(&client.ID, &client.ClientName, &client.Version, &client.Image, &client.CPU, &client.Memory, &client.Priority, &client.NeedRestart, &client.SpawnedAt, &client.CreatedAt, &client.UpdatedAt)
+		err := rows.Scan(
+			&client.ID,
+			&client.ClientName,
+			&client.Version,
+			&client.Image,
+			&client.CPU,
+			&client.Memory,
+			&client.Priority,
+			&client.NeedRestart,
+			&client.SpawnedAt,
+			&client.CreatedAt,
+			&client.UpdatedAt,
+		)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
@@ -287,7 +299,13 @@ func (cr *clientRepository) AlgorithmByClientID(ctx context.Context, clientID in
 	`
 
 	var algorithm models.AlgorithmStatus
-	err := cr.db.QueryRowContext(ctx, query, clientID).Scan(&algorithm.ID, &algorithm.ClientID, &algorithm.VWAP, &algorithm.TWAP, &algorithm.HFT)
+	err := cr.db.QueryRowContext(ctx, query, clientID).Scan(
+		&algorithm.ID,
+		&algorithm.ClientID,
+		&algorithm.VWAP,
+		&algorithm.TWAP,
+		&algorithm.HFT,
+	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, err

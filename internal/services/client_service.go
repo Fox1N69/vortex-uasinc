@@ -69,7 +69,7 @@ func (cs *clientService) UpdateAlgorithmStatus(id int64, status map[string]inter
 // When the function completes, the Ticker is stopped to release resources.
 func (cs *clientService) StartAlgorithmSync() {
 	log.Infof("Starting synchronization process...")
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(5 * time.Minute)
 
 	go func() {
 		defer ticker.Stop()
@@ -80,14 +80,12 @@ func (cs *clientService) StartAlgorithmSync() {
 }
 
 func (cs *clientService) syncAlgorithms() {
-	// Getting a list of all clients from the database
 	clients, err := cs.repository.Clients(context.Background())
 	if err != nil {
 		log.Errorf("Failed to fetch clients from database: %v", err)
 		return
 	}
 
-	// For each client, we check the statuses of the algorithms and manage Kubernetes feeds
 	for _, client := range clients {
 		algoStatus, err := cs.repository.AlgorithmByClientID(context.Background(), client.ID)
 		if err != nil {

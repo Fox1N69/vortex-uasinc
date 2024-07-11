@@ -16,7 +16,7 @@ make dep
 Запуск проекта локально
 
 ```console
-make run-tracker
+make run-algosync
 ```
 
 Запуск тестов
@@ -28,10 +28,12 @@ make test
 Сборка проекта
 
 ```console
-make build-tacker
+make build-algosync
 ```
 
 Запуск с hot reload
+
+Переменуйте example.air.toml в air.tomal
 
 ```console
 air

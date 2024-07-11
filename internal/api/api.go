@@ -33,7 +33,8 @@ func NewServer(infra infra.Infra) Server {
 
 // Run api server
 func (c *server) Run() {
-	c.gin.Use(c.middleware.RPSLimit(100))
+	c.gin.Use(c.middleware.RPSLimit(c.infra.Config().GetInt("rps_limit")))
+
 	c.gin.Use(c.middleware.CORS())
 	c.handlers()
 	c.v1()
