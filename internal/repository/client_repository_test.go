@@ -17,7 +17,10 @@ func TestCreate(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	repo := repository.NewClientRepository(db, &redis.Client{})
+	// Initialize a mock Redis client
+	redisClient := &redis.Client{}
+
+	repo := repository.NewClientRepository(db, redisClient)
 
 	client := &models.Client{
 		ClientName:  "TestClient",
@@ -32,16 +35,32 @@ func TestCreate(t *testing.T) {
 		UpdatedAt:   time.Now(),
 	}
 
+	algorithm := &models.AlgorithmStatus{
+		VWAP: false,
+		TWAP: false,
+		HFT:  false,
+	}
+
+	// Expectations for client creation query
+	mock.ExpectBegin()
 	mock.ExpectQuery("INSERT INTO clients").
 		WithArgs(client.ClientName, client.Version, client.Image, client.CPU, client.Memory, client.Priority, client.NeedRestart, client.SpawnedAt, client.CreatedAt, client.UpdatedAt).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
+	mock.ExpectQuery("INSERT INTO algorithm_status").
+		WithArgs(1, algorithm.VWAP, algorithm.TWAP, algorithm.HFT).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
+	mock.ExpectCommit()
 
-	id, err := repo.Create(client)
+	// Call the Create method
+	id, err := repo.Create(client, algorithm)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(1), id)
-	mock.ExpectationsWereMet()
-}
 
+	// Verify mock expectations
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
 func TestClientByID(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
@@ -179,31 +198,6 @@ func TestClients(t *testing.T) {
 	for i := range expectedClients {
 		assert.Equal(t, expectedClients[i], clients[i], "client mismatch")
 	}
-}
-
-func TestCreateAlgorithm(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
-
-	repo := repository.NewClientRepository(db, &redis.Client{})
-	algorithm := &models.AlgorithmStatus{
-		ClientID: 1,
-		VWAP:     true,
-		TWAP:     false,
-		HFT:      true,
-	}
-
-	mock.ExpectBegin()
-	mock.ExpectQuery("INSERT INTO algorithm_status").
-		WithArgs(algorithm.ClientID, algorithm.VWAP, algorithm.TWAP, algorithm.HFT).
-		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
-	mock.ExpectCommit()
-
-	id, err := repo.CreateAlgorithm(algorithm)
-	assert.NoError(t, err)
-	assert.Equal(t, int64(1), id)
-	mock.ExpectationsWereMet()
 }
 
 func TestAlgorithmStatuses(t *testing.T) {

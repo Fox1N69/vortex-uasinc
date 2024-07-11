@@ -17,7 +17,6 @@ type ClientService interface {
 	Update(id int64, updateParams map[string]interface{}) error
 	Delete(id int64) error
 	Clients(ctx context.Context) ([]models.Client, error)
-	CreateAlgorithm(algorithm *models.AlgorithmStatus) (int64, error)
 	AlgorithmStatuses() ([]models.AlgorithmStatus, error)
 	UpdateAlgorithmStatus(id int64, status map[string]interface{}) error
 	StartAlgorithmSync()
@@ -36,7 +35,8 @@ func NewClientService(clientRepo repository.ClientRepository, k8sDeployer k8s.Ku
 }
 
 func (cs *clientService) Create(client *models.Client) (int64, error) {
-	return cs.repository.Create(client)
+	var algorithm models.AlgorithmStatus
+	return cs.repository.Create(client, &algorithm)
 }
 
 func (cs *clientService) ClientByID(id int64) (*models.Client, error) {
@@ -53,10 +53,6 @@ func (cs *clientService) Delete(id int64) error {
 
 func (cs *clientService) Clients(ctx context.Context) ([]models.Client, error) {
 	return cs.repository.Clients(ctx)
-}
-
-func (cs *clientService) CreateAlgorithm(algorithm *models.AlgorithmStatus) (int64, error) {
-	return cs.repository.CreateAlgorithm(algorithm)
 }
 
 func (cs *clientService) AlgorithmStatuses() ([]models.AlgorithmStatus, error) {

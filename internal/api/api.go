@@ -64,7 +64,6 @@ func (c *server) v1() {
 			client.PATCH("/:id", clientHandler.UpdateClient)
 			client.DELETE("/:id", clientHandler.DeleteClient)
 			client.PATCH("/algorithm/:id", clientHandler.UpdateAlgorithmStatus)
-			client.POST("/algorithm/create", clientHandler.CreateAlgorithm)
 		}
 	}
 

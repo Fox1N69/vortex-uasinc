@@ -11,16 +11,14 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/sirupsen/logrus"
 )
 
 type ClientRepository interface {
-	Create(client *models.Client) (int64, error)
+	Create(client *models.Client, algorithm *models.AlgorithmStatus) (int64, error)
 	ClientByID(id int64) (*models.Client, error)
 	Update(id int64, updateParams map[string]interface{}) error
 	Delete(id int64) error
 	Clients(ctx context.Context) ([]models.Client, error)
-	CreateAlgorithm(algorithm *models.AlgorithmStatus) (int64, error)
 	AlgorithmStatuses() ([]models.AlgorithmStatus, error)
 	AlgorithmByClientID(ctx context.Context, clientID int64) (*models.AlgorithmStatus, error)
 	UpdateAlgorithmStatus(id int64, status map[string]interface{}) error
@@ -35,18 +33,30 @@ func NewClientRepository(db *sql.DB, redis *redis.Client) ClientRepository {
 	return &clientRepository{db: db, rdb: redis}
 }
 
-func (cr *clientRepository) Create(client *models.Client) (int64, error) {
+func (cr *clientRepository) Create(client *models.Client, algorithm *models.AlgorithmStatus) (int64, error) {
 	const op = "repository.client.Create"
 
-	query := `
-	INSERT INTO clients (client_name, version, image, cpu, memory, priority, need_restart, spawned_at, created_at, updated_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-	RETURNING id
+	tx, err := cr.db.Begin()
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			log.Printf("%s: transaction rolled back due to error: %v", op, err)
+		}
+	}()
+
+	// Create client
+	queryClient := `
+			INSERT INTO clients (client_name, version, image, cpu, memory, priority, need_restart, spawned_at, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+			RETURNING id
 	`
 
-	var id int64
-	err := cr.db.QueryRow(
-		query,
+	var clientID int64
+	err = tx.QueryRow(
+		queryClient,
 		client.ClientName,
 		client.Version,
 		client.Image,
@@ -57,12 +67,36 @@ func (cr *clientRepository) Create(client *models.Client) (int64, error) {
 		client.SpawnedAt,
 		client.CreatedAt,
 		client.UpdatedAt,
-	).Scan(&id)
+	).Scan(&clientID)
 	if err != nil {
-		return 0, fmt.Errorf("%s %w Cloud not create client", op, err)
+		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return id, nil
+	// Create algorithm status
+	queryAlgorithm := `
+			INSERT INTO algorithm_status (client_id, vwap, twap, hft)
+			VALUES ($1, $2, $3, $4)
+			RETURNING id
+	`
+
+	algorithm.ClientID = clientID // Set client ID in algorithm status
+	err = tx.QueryRow(
+		queryAlgorithm,
+		algorithm.ClientID,
+		algorithm.VWAP,
+		algorithm.TWAP,
+		algorithm.HFT,
+	).Scan(&algorithm.ID)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	// Commit transaction
+	if err := tx.Commit(); err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return clientID, nil
 }
 
 func (cr *clientRepository) ClientByID(id int64) (*models.Client, error) {
@@ -226,41 +260,6 @@ func (cr *clientRepository) Clients(ctx context.Context) ([]models.Client, error
 	return clients, nil
 } */
 
-func (cr *clientRepository) CreateAlgorithm(algorithm *models.AlgorithmStatus) (int64, error) {
-	const op = "repository.client.CreateAlgorithm"
-
-	tx, err := cr.db.Begin()
-	if err != nil {
-		return 0, fmt.Errorf("%s: %w", op, err)
-	}
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-			log.Printf("%s: transaction rolled back due to error: %v", op, err)
-		}
-	}()
-
-	query := `
-	INSERT INTO algorithm_status (client_id, vwap, twap, hft)
-	VALUES ($1, $2, $3, $4)
-	RETURNING id
-	`
-
-	var id int64
-	err = tx.QueryRow(query, algorithm.ClientID, algorithm.VWAP, algorithm.TWAP, algorithm.HFT).Scan(&id)
-	if err != nil {
-		return 0, fmt.Errorf("%s: %w", op, err)
-	}
-
-	if err := tx.Commit(); err != nil {
-		return 0, fmt.Errorf("%s: %w", op, err)
-	}
-
-	logrus.Printf("%s: successfully created algorithm with ID %d", op, id)
-
-	return id, nil
-}
-
 func (cr *clientRepository) AlgorithmStatuses() ([]models.AlgorithmStatus, error) {
 	const op = "repository.client.AlgorithmStatuses"
 
@@ -340,7 +339,7 @@ func (cr *clientRepository) AlgorithmByClientID(ctx context.Context, clientID in
 	err := cr.db.QueryRowContext(ctx, query, clientID).Scan(&algorithm.ID, &algorithm.ClientID, &algorithm.VWAP, &algorithm.TWAP, &algorithm.HFT)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, err 
+			return nil, err
 		}
 		return nil, fmt.Errorf("%s %w", op, err)
 	}

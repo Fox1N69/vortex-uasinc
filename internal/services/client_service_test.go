@@ -15,8 +15,8 @@ type MockClientRepository struct {
 	mock.Mock
 }
 
-func (m *MockClientRepository) Create(client *models.Client) (int64, error) {
-	args := m.Called(client)
+func (m *MockClientRepository) Create(client *models.Client, algorithm *models.AlgorithmStatus) (int64, error) {
+	args := m.Called(client, algorithm)
 	return args.Get(0).(int64), args.Error(1)
 }
 
@@ -38,11 +38,6 @@ func (m *MockClientRepository) Delete(id int64) error {
 func (m *MockClientRepository) Clients(ctx context.Context) ([]models.Client, error) {
 	args := m.Called(ctx)
 	return args.Get(0).([]models.Client), args.Error(1)
-}
-
-func (m *MockClientRepository) CreateAlgorithm(algorithm *models.AlgorithmStatus) (int64, error) {
-	args := m.Called(algorithm)
-	return args.Get(0).(int64), args.Error(1)
 }
 
 func (m *MockClientRepository) AlgorithmStatuses() ([]models.AlgorithmStatus, error) {
@@ -97,15 +92,20 @@ func TestClientService_Create(t *testing.T) {
 	service := service.NewClientService(mockRepo, mockK8sDeployer)
 
 	client := &models.Client{ID: 1, ClientName: "Test Client"}
-	mockRepo.On("Create", client).Return(int64(1), nil)
+	algorithm := &models.AlgorithmStatus{} // Create an empty algorithm status object
 
+	// Expectations for repository.Create call
+	mockRepo.On("Create", client, algorithm).Return(int64(1), nil)
+
+	// Call the service method
 	id, err := service.Create(client)
 
 	assert.NoError(t, err)
 	assert.Equal(t, int64(1), id)
+
+	// Verify mock expectations
 	mockRepo.AssertExpectations(t)
 }
-
 func TestClientService_ClientByID(t *testing.T) {
 	mockRepo := new(MockClientRepository)
 	mockK8sDeployer := new(MockKubernetesDeployer)
@@ -163,21 +163,6 @@ func TestClientService_Clients(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, clients, res)
-	mockRepo.AssertExpectations(t)
-}
-
-func TestClientService_CreateAlgorithm(t *testing.T) {
-	mockRepo := new(MockClientRepository)
-	mockK8sDeployer := new(MockKubernetesDeployer)
-	service := service.NewClientService(mockRepo, mockK8sDeployer)
-
-	algorithm := &models.AlgorithmStatus{ID: 1, ClientID: 1, VWAP: true}
-	mockRepo.On("CreateAlgorithm", algorithm).Return(int64(1), nil)
-
-	id, err := service.CreateAlgorithm(algorithm)
-
-	assert.NoError(t, err)
-	assert.Equal(t, int64(1), id)
 	mockRepo.AssertExpectations(t)
 }
 
