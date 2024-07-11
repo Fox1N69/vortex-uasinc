@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Client struct {
 	ID          int64     `json:"id"`

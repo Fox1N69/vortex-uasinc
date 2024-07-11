@@ -7,6 +7,7 @@ import (
 	"test-task/pkg/http/response"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mitchellh/mapstructure"
 )
 
 type ClientHandler interface {
@@ -57,8 +58,9 @@ func (ch *clientHandler) UpdateClient(c *gin.Context) {
 		return
 	}
 
-	if err := ch.service.Update(clientID, updateParams); err != nil {
-		response.Error(501, err)
+	var client models.Client
+	if err := mapstructure.Decode(updateParams, &client); err != nil {
+		response.Error(400, err)
 		return
 	}
 
