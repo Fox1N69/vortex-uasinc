@@ -162,8 +162,6 @@ func TestClients(t *testing.T) {
 
 	repo := repository.NewClientRepository(db)
 
-	ctx := context.Background()
-
 	expectedClients := []models.Client{
 		{
 			ID:          1,
@@ -201,7 +199,7 @@ func TestClients(t *testing.T) {
 	mock.ExpectQuery("SELECT id, client_name, version, image, cpu, memory, priority, need_restart, spawned_at, created_at, updated_at FROM clients").
 		WillReturnRows(rows)
 
-	clients, err := repo.Clients(ctx)
+	clients, err := repo.Clients()
 	assert.NoError(t, err, "error retrieving clients")
 
 	assert.NoError(t, mock.ExpectationsWereMet())

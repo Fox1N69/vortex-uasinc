@@ -1,0 +1,1 @@
+[37mDEBU[0m[2024-07-11T21:06:43+05:00]client_repository.go:260 test-task/internal/repository.(*clientRepository).Clients() repository.client.Clients: retrieved 2 clients 

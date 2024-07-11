@@ -1,0 +1,20 @@
+[36mINFO[0m[2024-07-11T21:07:10+05:00]client_service.go:75 test-task/internal/services.(*clientService).StartAlgorithmSync() service.client.StartAlgorithmSync: Starting synchronization process... 
+[36mINFO[0m[2024-07-11T21:07:10+05:00]client_service.go:85 test-task/internal/services.(*clientService).StartAlgorithmSync() service.client.StartAlgorithmSync: Synchronization process started 
+[36mINFO[0m[2024-07-11T21:07:15+05:00]client_service.go:123 test-task/internal/services.(*clientService).syncPodsForClient() service.client.syncPodsForClient: VWAP pod deployed successfully for client 1 
+[36mINFO[0m[2024-07-11T21:07:15+05:00]client_service.go:145 test-task/internal/services.(*clientService).syncPodsForClient() service.client.syncPodsForClient: TWAP pod deleted successfully for client 1 
+[36mINFO[0m[2024-07-11T21:07:15+05:00]client_service.go:161 test-task/internal/services.(*clientService).syncPodsForClient() service.client.syncPodsForClient: HFT pod deleted successfully for client 1 
+[36mINFO[0m[2024-07-11T21:07:15+05:00]client_service.go:129 test-task/internal/services.(*clientService).syncPodsForClient() service.client.syncPodsForClient: VWAP pod deleted successfully for client 2 
+[36mINFO[0m[2024-07-11T21:07:15+05:00]client_service.go:145 test-task/internal/services.(*clientService).syncPodsForClient() service.client.syncPodsForClient: TWAP pod deleted successfully for client 2 
+[36mINFO[0m[2024-07-11T21:07:15+05:00]client_service.go:161 test-task/internal/services.(*clientService).syncPodsForClient() service.client.syncPodsForClient: HFT pod deleted successfully for client 2 
+[36mINFO[0m[2024-07-11T21:07:20+05:00]client_service.go:123 test-task/internal/services.(*clientService).syncPodsForClient() service.client.syncPodsForClient: VWAP pod deployed successfully for client 1 
+[36mINFO[0m[2024-07-11T21:07:20+05:00]client_service.go:145 test-task/internal/services.(*clientService).syncPodsForClient() service.client.syncPodsForClient: TWAP pod deleted successfully for client 1 
+[36mINFO[0m[2024-07-11T21:07:20+05:00]client_service.go:161 test-task/internal/services.(*clientService).syncPodsForClient() service.client.syncPodsForClient: HFT pod deleted successfully for client 1 
+[36mINFO[0m[2024-07-11T21:07:20+05:00]client_service.go:129 test-task/internal/services.(*clientService).syncPodsForClient() service.client.syncPodsForClient: VWAP pod deleted successfully for client 2 
+[36mINFO[0m[2024-07-11T21:07:20+05:00]client_service.go:145 test-task/internal/services.(*clientService).syncPodsForClient() service.client.syncPodsForClient: TWAP pod deleted successfully for client 2 
+[36mINFO[0m[2024-07-11T21:07:20+05:00]client_service.go:161 test-task/internal/services.(*clientService).syncPodsForClient() service.client.syncPodsForClient: HFT pod deleted successfully for client 2 
+[36mINFO[0m[2024-07-11T21:07:25+05:00]client_service.go:123 test-task/internal/services.(*clientService).syncPodsForClient() service.client.syncPodsForClient: VWAP pod deployed successfully for client 1 
+[36mINFO[0m[2024-07-11T21:07:25+05:00]client_service.go:145 test-task/internal/services.(*clientService).syncPodsForClient() service.client.syncPodsForClient: TWAP pod deleted successfully for client 1 
+[36mINFO[0m[2024-07-11T21:07:25+05:00]client_service.go:161 test-task/internal/services.(*clientService).syncPodsForClient() service.client.syncPodsForClient: HFT pod deleted successfully for client 1 
+[36mINFO[0m[2024-07-11T21:07:25+05:00]client_service.go:129 test-task/internal/services.(*clientService).syncPodsForClient() service.client.syncPodsForClient: VWAP pod deleted successfully for client 2 
+[36mINFO[0m[2024-07-11T21:07:25+05:00]client_service.go:145 test-task/internal/services.(*clientService).syncPodsForClient() service.client.syncPodsForClient: TWAP pod deleted successfully for client 2 
+[36mINFO[0m[2024-07-11T21:07:25+05:00]client_service.go:161 test-task/internal/services.(*clientService).syncPodsForClient() service.client.syncPodsForClient: HFT pod deleted successfully for client 2 

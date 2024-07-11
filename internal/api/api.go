@@ -43,11 +43,16 @@ func (c *server) Run() {
 	c.handlers()
 	c.v1()
 
-	c.service.ClientService().StartAlgorithmSync()
+	go c.startAlgorithmSync()
+
 	log := logger.GetLogger()
 	log.Info("Start algorithm sync")
 
 	c.gin.Run(c.infra.Port())
+}
+
+func (c *server) startAlgorithmSync() {
+	c.service.ClientService().StartAlgorithmSync()
 }
 
 // handlers sets up custom route handlers for specific routes on the server.

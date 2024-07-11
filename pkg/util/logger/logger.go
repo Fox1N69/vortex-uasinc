@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
 
 	"github.com/sirupsen/logrus"
@@ -77,7 +78,16 @@ func init() {
 		panic(fmt.Errorf("failed to create logs directory: %w", err))
 	}
 
-	allFile, err := os.OpenFile("logs/all.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0640)
+	// Получаем имя текущей директории
+	dir, err := os.Getwd()
+	if err != nil {
+		panic(fmt.Errorf("failed to get current working directory: %w", err))
+	}
+
+	// Формируем имя файла на основе имени директории
+	logFileName := filepath.Join(dir, "logs", fmt.Sprintf("%s.log", filepath.Base(dir)))
+
+	allFile, err := os.OpenFile(logFileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0640)
 	if err != nil {
 		panic(fmt.Errorf("failed to open log file: %w", err))
 	}

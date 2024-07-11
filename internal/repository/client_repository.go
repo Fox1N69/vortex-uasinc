@@ -16,7 +16,7 @@ type ClientRepository interface {
 	ClientByID(id int64) (*models.Client, error)
 	Update(id int64, updateParams map[string]interface{}) error
 	Delete(id int64) error
-	Clients(ctx context.Context) ([]models.Client, error)
+	Clients() ([]models.Client, error)
 	AlgorithmStatuses() ([]models.AlgorithmStatus, error)
 	AlgorithmByClientID(ctx context.Context, clientID int64) (*models.AlgorithmStatus, error)
 	UpdateAlgorithmStatus(id int64, status map[string]interface{}) error
@@ -214,7 +214,7 @@ func (cr *clientRepository) Delete(id int64) error {
 
 // Clients retrieves all clients stored in the database.
 // It returns a slice of client objects or an error if the operation fails.
-func (cr *clientRepository) Clients(ctx context.Context) ([]models.Client, error) {
+func (cr *clientRepository) Clients() ([]models.Client, error) {
 	const op = "repository.client.Clients"
 
 	query := `
@@ -222,7 +222,7 @@ func (cr *clientRepository) Clients(ctx context.Context) ([]models.Client, error
 		FROM clients
 	`
 
-	rows, err := cr.db.QueryContext(ctx, query)
+	rows, err := cr.db.Query(query)
 	if err != nil {
 		cr.log.Errorf("%s: failed to retrieve clients: %v", op, err)
 		return nil, fmt.Errorf("failed to retrieve clients: %w", err)

@@ -35,8 +35,8 @@ func (m *MockClientRepository) Delete(id int64) error {
 	return args.Error(0)
 }
 
-func (m *MockClientRepository) Clients(ctx context.Context) ([]models.Client, error) {
-	args := m.Called(ctx)
+func (m *MockClientRepository) Clients() ([]models.Client, error) {
+	args := m.Called()
 	return args.Get(0).([]models.Client), args.Error(1)
 }
 
@@ -156,7 +156,7 @@ func TestClientService_Clients(t *testing.T) {
 	}
 	mockRepo.On("Clients", mock.Anything).Return(clients, nil)
 
-	res, err := service.Clients(context.Background())
+	res, err := service.Clients()
 
 	assert.NoError(t, err)
 	assert.Equal(t, clients, res)
@@ -215,7 +215,7 @@ func TestStartAlgorithmSync(t *testing.T) {
 
 	go service.StartAlgorithmSync()
 
-	time.Sleep(5 * time.Minute)
+	time.Sleep(15 * time.Second)
 
 	mockRepo.AssertExpectations(t)
 }
