@@ -13,5 +13,8 @@ build-algosync:
 docker-image:
 	docker build -t server:v1 .
 
+docker-build:
+	docker-compose up --build
+
 docker-run:
-	docker run -it -d -p 3000:3000 --name server
+	docker-compose up

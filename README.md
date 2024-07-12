@@ -11,7 +11,13 @@
 **Сборка docker контрейнера**
 
 ```console
-docker-compose up --build
+make docker-build
+```
+
+**Запуск docker контрейнера**
+
+```console
+make docker-run
 ```
 
 **Запуск миграции зависимостей**
